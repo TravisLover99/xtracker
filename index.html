@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cortex | Ethereal UI</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        accent: { 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Outfit', sans-serif; background: #fafafa; color: #09090b; overflow-x: hidden; }
+        html.dark body { background: #050505; color: #fafafa; }
+        
+        .double-bezel {
+            background: rgba(0,0,0,0.03);
+            padding: 0.5rem;
+            border-radius: 2.5rem;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        html.dark .double-bezel {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .inner-core {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 2rem;
+            box-shadow: 0 30px 60px -15px rgba(0,0,0,0.05), inset 0 1px 1px rgba(255,255,255,1);
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+        html.dark .inner-core {
+            background: rgba(20,20,22,0.8);
+            box-shadow: 0 30px 60px -15px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .diffused-glow {
+            position: absolute; border-radius: 50%;
+            filter: blur(120px); z-index: -1; pointer-events: none;
+            opacity: 0.5;
+        }
+
+        [data-lang] { display: none; }
+        .lang-active { display: inline; }
+        div.lang-active, section.lang-active, p.lang-active, h1.lang-active, h2.lang-active, h3.lang-active { display: block; }
+    </style>
+  <link rel="icon" type="image/png" href="favicon.png" />
+</head>
+<body class="antialiased selection:bg-accent-500 selection:text-white">
+
+    <!-- Ambient -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-[-1]">
+        <div class="diffused-glow w-[800px] h-[800px] bg-accent-500/10 dark:bg-accent-500/20 top-[-20%] left-[-10%]"></div>
+        <div class="diffused-glow w-[600px] h-[600px] bg-blue-500/10 dark:bg-blue-500/15 bottom-[-10%] right-[-10%]"></div>
+    </div>
+
+    <!-- Fluid Nav -->
+    <nav class="fixed top-8 left-1/2 -translate-x-1/2 z-50 w-max double-bezel p-1">
+        <div class="inner-core px-6 py-3 flex items-center gap-8 rounded-[2.2rem]">
+            <div class="flex items-center gap-2 font-black text-lg tracking-tighter">
+                <i class="ph-bold ph-aperture text-accent-500 text-2xl"></i> CORTEX
+            </div>
+            <div class="hidden md:flex items-center gap-6 text-sm font-semibold text-zinc-500 dark:text-zinc-400">
+                <a href="#install" class="hover:text-zinc-900 dark:hover:text-white transition-colors">
+                    <span data-lang="ru">Установка</span><span data-lang="en">Install</span><span data-lang="zh">安装</span><span data-lang="es">Instalar</span><span data-lang="ja">インストール</span>
+                </a>
+                <a href="#features" class="hover:text-zinc-900 dark:hover:text-white transition-colors">
+                    <span data-lang="ru">Функции</span><span data-lang="en">Features</span><span data-lang="zh">功能</span><span data-lang="es">Funciones</span><span data-lang="ja">機能</span>
+                </a>
+                <a href="#faq" class="hover:text-zinc-900 dark:hover:text-white transition-colors">FAQ</a>
+            </div>
+            <div class="flex items-center gap-2 ml-4 pl-4 border-l border-zinc-200 dark:border-zinc-800">
+                <button onclick="toggleTheme()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                    <i id="theme-icon" class="ph-bold ph-sun text-lg"></i>
+                </button>
+                <div class="relative group cursor-pointer">
+                    <div class="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 text-xs font-bold uppercase" id="current-lang">EN</div>
+                    <div class="absolute top-full right-0 mt-2 w-32 double-bezel p-1 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300">
+                        <div class="inner-core p-1 flex flex-col">
+                            <button onclick="setLang('ru')" class="px-3 py-2 text-sm font-medium rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-left">Русский</button>
+                            <button onclick="setLang('en')" class="px-3 py-2 text-sm font-medium rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-left">English</button>
+                            <button onclick="setLang('zh')" class="px-3 py-2 text-sm font-medium rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-left">中文</button>
+                            <button onclick="setLang('es')" class="px-3 py-2 text-sm font-medium rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-left">Español</button>
+                            <button onclick="setLang('ja')" class="px-3 py-2 text-sm font-medium rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-left">日本語</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="min-h-[100dvh] flex flex-col items-center justify-center pt-32 pb-24 px-6 text-center">
+        <div class="gsap-hero opacity-0 translate-y-8 max-w-4xl mx-auto">
+            <h1 class="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-[0.85] mb-8">
+                <span data-lang="ru">Ваше<br><span class="text-accent-500">преимущество</span></span>
+                <span data-lang="en">Your<br><span class="text-accent-500">advantage</span></span>
+                <span data-lang="zh">绝对<br><span class="text-accent-500">优势</span></span>
+                <span data-lang="es">Tu<br><span class="text-accent-500">ventaja</span></span>
+                <span data-lang="ja">圧倒的<br><span class="text-accent-500">優位性</span></span>
+            </h1>
+            <p class="text-lg md:text-2xl text-zinc-500 dark:text-zinc-400 font-medium max-w-2xl mx-auto mb-16 leading-relaxed">
+                <span data-lang="ru">Локальный тулкит без установки. Выполняется прямо в браузере. Выжимайте максимум из каждого трейда на Axiom.</span>
+                <span data-lang="en">A local toolkit with no installation. Executes right in your browser. Squeeze the maximum out of every trade on Axiom.</span>
+                <span data-lang="zh">无需安装的本地工具包。直接在浏览器中执行。从 Axiom 的每笔交易中榨取最大利润。</span>
+                <span data-lang="es">Un kit local sin instalación. Se ejecuta en tu navegador. Exprime al máximo cada operación en Axiom.</span>
+                <span data-lang="ja">インストール不要のローカルツールキット。ブラウザ内で直接実行。Axiomの全トレードから最大利益を。</span>
+            </p>
+            
+            <div class="group inline-flex items-center">
+                <a class="bookmarklet btn flex items-center gap-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-full pl-8 pr-2 py-2 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-[0.98] hover:shadow-2xl hover:shadow-accent-500/20" href="#" data-style="">
+                    <span class="font-bold text-lg">
+                        <span data-lang="ru">Установить Cortex</span>
+                        <span data-lang="en">Install Cortex</span>
+                        <span data-lang="zh">安装 Cortex</span>
+                        <span data-lang="es">Instalar Cortex</span>
+                        <span data-lang="ja">Cortex をインストール</span>
+                    </span>
+                    <div class="w-12 h-12 rounded-full bg-white/10 dark:bg-black/5 flex items-center justify-center transition-transform duration-500 group-hover:translate-x-1 group-hover:-translate-y-0.5">
+                        <i class="ph-bold ph-arrow-up-right text-xl"></i>
+                    </div>
+                </a>
+            </div>
+            <p class="mt-6 text-sm font-semibold text-zinc-400">
+                <span data-lang="ru">↑ Перетащите кнопку на панель закладок</span>
+                <span data-lang="en">↑ Drag button to bookmarks bar</span>
+                <span data-lang="zh">↑ 将按钮拖动到书签栏</span>
+                <span data-lang="es">↑ Arrastra el botón a la barra</span>
+                <span data-lang="ja">↑ ボタンをブックマークバーへ</span>
+            </p>
+        </div>
+    </section>
+
+    <!-- Z-Axis Cascade Install Sequence -->
+    <section id="install" class="py-32 bg-zinc-50 dark:bg-zinc-900/20 relative z-10">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-5xl font-black tracking-tight mb-24 text-center gsap-fade">
+                <span data-lang="ru">Активация за 10 секунд</span>
+                <span data-lang="en">10-Second Activation</span>
+                <span data-lang="zh">10秒激活</span>
+                <span data-lang="es">Activación en 10 seg</span>
+                <span data-lang="ja">10秒でアクティベーション</span>
+            </h2>
+
+            <div class="stack-wrapper relative w-full max-w-4xl mx-auto">
+                <!-- Card 1 -->
+                <div class="stack-card sticky top-32 mb-24 double-bezel w-full origin-top">
+                    <div class="inner-core p-12 md:p-16 flex flex-col md:flex-row gap-12 items-center">
+                        <div class="w-24 h-24 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                            <span class="text-4xl font-black">1</span>
+                        </div>
+                        <div>
+                            <h3 class="text-3xl font-bold mb-4">
+                                <span data-lang="ru">Покажите панель</span><span data-lang="en">Show Bar</span><span data-lang="zh">显示书签栏</span><span data-lang="es">Mostrar barra</span><span data-lang="ja">バーを表示</span>
+                            </h3>
+                            <p class="text-xl text-zinc-500 font-medium">
+                                <span data-lang="en">Press <kbd class="font-mono bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md">Ctrl+Shift+B</kbd> in your browser.</span>
+                                <span data-lang="ru">Нажмите <kbd class="font-mono bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md">Ctrl+Shift+B</kbd> в браузере.</span>
+                                <span data-lang="zh">按 <kbd class="font-mono bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md">Ctrl+Shift+B</kbd>。</span>
+                                <span data-lang="es">Presiona <kbd class="font-mono bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md">Ctrl+Shift+B</kbd>.</span>
+                                <span data-lang="ja"><kbd class="font-mono bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md">Ctrl+Shift+B</kbd> を押す。</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="stack-card sticky top-40 mb-24 double-bezel w-full origin-top">
+                    <div class="inner-core p-12 md:p-16 flex flex-col md:flex-row gap-12 items-center">
+                        <div class="w-24 h-24 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                            <span class="text-4xl font-black">2</span>
+                        </div>
+                        <div>
+                            <h3 class="text-3xl font-bold mb-4">
+                                <span data-lang="ru">Перетащите</span><span data-lang="en">Drag & Drop</span><span data-lang="zh">拖放</span><span data-lang="es">Arrastrar y soltar</span><span data-lang="ja">ドラッグ＆ドロップ</span>
+                            </h3>
+                            <p class="text-xl text-zinc-500 font-medium">
+                                <span data-lang="en">Grab the black button from the top of the site to the bar.</span>
+                                <span data-lang="ru">Захватите кнопку из начала сайта на панель.</span>
+                                <span data-lang="zh">将网站顶部的黑色按钮拖到书签栏。</span>
+                                <span data-lang="es">Coge el botón negro y suéltalo en la barra.</span>
+                                <span data-lang="ja">上部のボタンをバーにドラッグ。</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="stack-card sticky top-48 mb-24 double-bezel w-full origin-top">
+                    <div class="inner-core p-12 md:p-16 flex flex-col md:flex-row gap-12 items-center">
+                        <div class="w-24 h-24 rounded-full bg-accent-500 text-white flex items-center justify-center shrink-0 shadow-xl shadow-accent-500/30">
+                            <i class="ph-bold ph-lightning text-4xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-3xl font-bold mb-4">
+                                <span data-lang="ru">Кликните в Axiom</span><span data-lang="en">Click on Axiom</span><span data-lang="zh">在 Axiom 上点击</span><span data-lang="es">Clic en Axiom</span><span data-lang="ja">Axiomでクリック</span>
+                            </h3>
+                            <p class="text-xl text-zinc-500 font-medium">
+                                <span data-lang="en">Go to the terminal and click the bookmark to execute.</span>
+                                <span data-lang="ru">Перейдите на терминал и нажмите закладку.</span>
+                                <span data-lang="zh">转到终端并点击书签。</span>
+                                <span data-lang="es">Ve a la terminal y haz clic en el marcador.</span>
+                                <span data-lang="ja">ターミナルでブックマークをクリック。</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Editorial Split Architecture -->
+    <section class="py-32 max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16">
+        <div class="flex flex-col justify-center">
+            <h2 class="text-4xl md:text-6xl font-black tracking-tighter mb-8 gsap-fade">
+                <span data-lang="en">Client-Side Architecture</span>
+                <span data-lang="ru">Клиентская Архитектура</span>
+                <span data-lang="zh">客户端架构</span>
+                <span data-lang="es">Arquitectura de Cliente</span>
+                <span data-lang="ja">クライアントアーキテクチャ</span>
+            </h2>
+            <p class="text-xl text-zinc-500 font-medium leading-relaxed mb-12 gsap-fade">
+                <span data-lang="en">We ditched background extensions. Cortex runs purely within the Axiom tab context exactly when you activate it. Zero browser bloat, maximum privacy.</span>
+                <span data-lang="ru">Мы отказались от фоновых расширений. Cortex работает исключительно в контексте вкладки Axiom. Нулевая нагрузка, максимальная конфиденциальность.</span>
+                <span data-lang="zh">我们放弃了后台扩展。Cortex 仅在 Axiom 选项卡中运行。零膨胀，最大隐私。</span>
+                <span data-lang="es">Prescindimos de extensiones de fondo. Cortex se ejecuta en la pestaña Axiom. Cero carga, máxima privacidad.</span>
+                <span data-lang="ja">バックグラウンド拡張を廃止。CortexはAxiomタブ内で純粋に実行されます。</span>
+            </p>
+        </div>
+        <div class="grid grid-cols-1 gap-6">
+            <div class="double-bezel gsap-fade">
+                <div class="inner-core p-10 h-full">
+                    <div class="w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-6">
+                        <i class="ph-bold ph-cpu text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Zero Bloat</h3>
+                    <p class="text-zinc-500 font-medium">No background processes eating your RAM. Runs exactly 1 second.</p>
+                </div>
+            </div>
+            <div class="double-bezel gsap-fade">
+                <div class="inner-core p-10 h-full">
+                    <div class="w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-6">
+                        <i class="ph-bold ph-shield-check text-2xl text-accent-500"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Privacy First</h3>
+                    <p class="text-zinc-500 font-medium">Code executes strictly client-side. No seed phrase access.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Asymmetrical Bento Features -->
+    <section id="features" class="py-32 bg-white dark:bg-black rounded-[4rem] mx-4 mb-32 shadow-[0_0_100px_rgba(0,0,0,0.05)] dark:shadow-none border border-zinc-100 dark:border-white/10 relative z-10 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-5xl font-black text-center tracking-tighter mb-24 gsap-fade">
+                <span data-lang="en">Professional's Arsenal</span>
+                <span data-lang="ru">Арсенал Профессионала</span>
+                <span data-lang="zh">专业人士的武器库</span>
+                <span data-lang="es">Arsenal de Profesionales</span>
+                <span data-lang="ja">プロの武器庫</span>
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-[300px]">
+                
+                <div class="double-bezel md:col-span-8 md:row-span-2 gsap-fade">
+                    <div class="inner-core h-full p-12 flex flex-col justify-between relative overflow-hidden bg-zinc-50/50 dark:bg-zinc-900/50">
+                        <div class="relative z-10 max-w-lg">
+                            <div class="w-14 h-14 rounded-full bg-white dark:bg-black shadow-sm flex items-center justify-center mb-6">
+                                <i class="ph-bold ph-eye text-2xl text-accent-500"></i>
+                            </div>
+                            <h3 class="text-4xl font-extrabold tracking-tighter mb-6">
+                                <span data-lang="en">Front-run the Market Makers</span>
+                                <span data-lang="ru">Опережайте Маркет-Мейкеров</span>
+                                <span data-lang="zh">抢跑做市商</span>
+                                <span data-lang="es">Anticípate a los Market Makers</span>
+                                <span data-lang="ja">マーケットメーカーの先を行く</span>
+                            </h3>
+                            <p class="text-xl text-zinc-500 font-medium">
+                                <span data-lang="en">Cortex analyzes the order book in real-time, highlighting hidden liquidity walls before the price moves.</span>
+                                <span data-lang="ru">Анализирует стакан ордеров в реальном времени, высвечивая скрытые стенки ликвидности.</span>
+                                <span data-lang="zh">实时分析订单簿，突出显示隐藏的流动性墙。</span>
+                                <span data-lang="es">Analiza el libro de órdenes destacando muros de liquidez ocultos.</span>
+                                <span data-lang="ja">オーダーブックをリアルタイム分析し、隠れた流動性の壁をハイライト。</span>
+                            </p>
+                        </div>
+                        <div class="absolute -right-20 -bottom-20 w-[400px] h-[400px] bg-accent-500/20 blur-[80px] rounded-full"></div>
+                    </div>
+                </div>
+
+                <div class="double-bezel md:col-span-4 gsap-fade">
+                    <div class="inner-core h-full p-10 flex flex-col justify-between">
+                        <i class="ph-bold ph-sword text-3xl text-zinc-900 dark:text-white"></i>
+                        <div>
+                            <h4 class="text-2xl font-bold tracking-tight mb-2">Anti-MEV</h4>
+                            <p class="text-zinc-500 font-medium">Private transaction routing protects you from sandwich bots.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="double-bezel md:col-span-4 gsap-fade">
+                    <div class="inner-core h-full p-10 flex flex-col justify-between bg-zinc-900 text-white dark:bg-white dark:text-zinc-900">
+                        <i class="ph-bold ph-faders text-3xl text-accent-400"></i>
+                        <div>
+                            <h4 class="text-2xl font-bold tracking-tight mb-2">Customization</h4>
+                            <p class="text-zinc-400 dark:text-zinc-500 font-medium">Clean the UI. Hide unnecessary panels, configure shortcuts.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="py-32 max-w-4xl mx-auto px-6">
+        <h2 class="text-4xl font-black text-center mb-16 tracking-tighter gsap-fade">FAQ</h2>
+        <div class="flex flex-col gap-4">
+            <!-- Q1 -->
+            <div class="double-bezel gsap-fade faq-item cursor-pointer group">
+                <div class="inner-core">
+                    <div class="px-8 py-6 flex justify-between items-center faq-header">
+                        <h4 class="text-xl font-bold tracking-tight">
+                            <span data-lang="en">How much does it cost?</span>
+                            <span data-lang="ru">Сколько это стоит?</span>
+                            <span data-lang="zh">要多少钱？</span>
+                            <span data-lang="es">¿Cuánto cuesta?</span>
+                            <span data-lang="ja">いくらですか？</span>
+                        </h4>
+                        <div class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center transition-transform duration-300 icon-wrap">
+                            <i class="ph-bold ph-plus text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="faq-content overflow-hidden max-h-0 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]">
+                        <div class="px-8 pb-8 text-lg text-zinc-500 font-medium">
+                            <span data-lang="en">Cortex is a completely free tool. No subscriptions, no trials. We earn through integrations with partner exchanges.</span>
+                            <span data-lang="ru">Полностью бесплатный инструмент. Нет подписок. Мы зарабатываем за счет интеграций.</span>
+                            <span data-lang="zh">完全免费的工具。没有订阅。我们通过与交易所集成获利。</span>
+                            <span data-lang="es">Herramienta completamente gratuita. Sin suscripciones.</span>
+                            <span data-lang="ja">完全に無料のツールです。サブスクリプションはありません。</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Q2 -->
+            <div class="double-bezel gsap-fade faq-item cursor-pointer group">
+                <div class="inner-core">
+                    <div class="px-8 py-6 flex justify-between items-center faq-header">
+                        <h4 class="text-xl font-bold tracking-tight">
+                            <span data-lang="en">Do I need to install an extension?</span>
+                            <span data-lang="ru">Нужно ли устанавливать расширение?</span>
+                            <span data-lang="zh">我需要安装扩展程序吗？</span>
+                            <span data-lang="es">¿Necesito instalar una extensión?</span>
+                            <span data-lang="ja">拡張機能をインストールする必要がありますか？</span>
+                        </h4>
+                        <div class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center transition-transform duration-300 icon-wrap">
+                            <i class="ph-bold ph-plus text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="faq-content overflow-hidden max-h-0 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]">
+                        <div class="px-8 pb-8 text-lg text-zinc-500 font-medium">
+                            <span data-lang="en">No. Cortex is a bookmarklet script. It runs for exactly 1 second when you click it.</span>
+                            <span data-lang="ru">Нет. Cortex — это скрипт-закладка. Он работает 1 секунду.</span>
+                            <span data-lang="zh">不。Cortex 是一个书签脚本。在您点击它时运行 1 秒。</span>
+                            <span data-lang="es">No. Cortex es un script de marcador. Se ejecuta exactamente 1 segundo.</span>
+                            <span data-lang="ja">いいえ。Cortex はブックマークレット スクリプトです。クリックした瞬間に1秒間実行されます。</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-16 px-6 border-t border-zinc-200 dark:border-white/10 text-center md:text-left">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="flex items-center gap-3 font-black text-xl tracking-tighter">
+                <i class="ph-bold ph-aperture text-accent-500 text-3xl"></i> CORTEX
+            </div>
+            <div class="flex gap-8 font-semibold text-zinc-500">
+                <a href="#" class="hover:text-zinc-900 dark:hover:text-white transition-colors">Twitter</a>
+                <a href="#" class="hover:text-zinc-900 dark:hover:text-white transition-colors">Telegram</a>
+            </div>
+            <p class="text-sm font-semibold text-zinc-400">© 2026 Cortex Protocol</p>
+        </div>
+    </footer>
+
+    <script>
+        // Translations
+        let currentLang = localStorage.getItem('cortex-lang') || 'en';
+        const setLang = (lang) => {
+            currentLang = lang;
+            document.getElementById('current-lang').innerText = lang;
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                if (el.dataset.lang === lang) el.classList.add('lang-active');
+                else el.classList.remove('lang-active');
+            });
+            localStorage.setItem('cortex-lang', lang);
+        };
+        setLang(currentLang);
+
+        // Theme
+        const toggleTheme = () => {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = 'ph-bold ph-moon text-lg';
+                localStorage.setItem('cortex-theme', 'light');
+            } else {
+                html.classList.add('dark');
+                icon.className = 'ph-bold ph-sun text-lg';
+                localStorage.setItem('cortex-theme', 'dark');
+            }
+        };
+        if (localStorage.getItem('cortex-theme') === 'dark' || (!localStorage.getItem('cortex-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            document.getElementById('theme-icon').className = 'ph-bold ph-sun text-lg';
+        } else {
+            document.getElementById('theme-icon').className = 'ph-bold ph-moon text-lg';
+        }
+
+        // Bookmarklet Design Hook
+        const bml = document.querySelector('.bookmarklet');
+        if (bml && bml.dataset.style !== undefined) {
+            bml.className += ' ' + bml.dataset.style;
+        }
+
+        // FAQ Toggle
+        document.querySelectorAll('.faq-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const content = item.querySelector('.faq-content');
+                const icon = item.querySelector('.icon-wrap');
+                const isOpen = item.classList.contains('active');
+                
+                document.querySelectorAll('.faq-item').forEach(i => {
+                    i.classList.remove('active');
+                    i.querySelector('.faq-content').style.maxHeight = '0px';
+                    i.querySelector('.faq-content').style.opacity = '0';
+                    i.querySelector('.icon-wrap').style.transform = 'rotate(0deg)';
+                });
+
+                if (!isOpen) {
+                    item.classList.add('active');
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                    content.style.opacity = '1';
+                    icon.style.transform = 'rotate(45deg)';
+                }
+            });
+        });
+
+        // Animations
+        gsap.registerPlugin(ScrollTrigger);
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            // Hero
+            gsap.to('.gsap-hero', { opacity: 1, y: 0, duration: 1.2, ease: "power4.out" });
+
+            // Fade elements
+            gsap.utils.toArray('.gsap-fade').forEach(el => {
+                gsap.from(el, {
+                    opacity: 0, y: 40, duration: 1, ease: "power3.out",
+                    scrollTrigger: { trigger: el, start: "top 85%" }
+                });
+            });
+
+            // Sticky Stack Z-Axis
+            const cards = gsap.utils.toArray('.stack-card');
+            cards.forEach((card, i) => {
+                if (i === cards.length - 1) return;
+                gsap.to(card, {
+                    scale: 0.9,
+                    opacity: 0.5,
+                    transformOrigin: "top center",
+                    ease: "none",
+                    scrollTrigger: {
+                        trigger: cards[i + 1],
+                        start: "top bottom",
+                        end: "top top",
+                        scrub: true
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
