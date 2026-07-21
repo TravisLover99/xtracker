@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cortex | Ethereal UI</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        accent: { 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed' }
+                    },
+                    animation: {
+                        'gradient-x': 'gradient-x 6s ease infinite',
+                        'spin-slow': 'spin 8s linear infinite',
+                        'shimmer': 'shimmer 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        'gradient-x': {
+                            '0%, 100%': { 'background-size': '200% 200%', 'background-position': 'left center' },
+                            '50%': { 'background-size': '200% 200%', 'background-position': 'right center' }
+                        },
+                        'shimmer': {
+                            '0%': { transform: 'translateX(-100%) skewX(-15deg)' },
+                            '50%, 100%': { transform: 'translateX(200%) skewX(-15deg)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #09090b;
+            --glass-bg: rgba(255, 255, 255, 0.6);
+            --glass-border: rgba(0, 0, 0, 0.08);
+            --glow-color: rgba(139, 92, 246, 0.3);
+            --canvas-particle: 0, 0, 0;
+        }
+        
+        html.dark {
+            --bg-color: #030303;
+            --text-color: #ffffff;
+            --glass-bg: rgba(10, 10, 12, 0.5);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --glow-color: rgba(139, 92, 246, 0.5);
+            --canvas-particle: 255, 255, 255;
+        }
+
+        body { 
+            font-family: 'Outfit', sans-serif; 
+            background: var(--bg-color); 
+            color: var(--text-color); 
+            overflow-x: hidden;
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+        
+        /* Interactive Canvas Background */
+        #webgl-canvas {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -4; pointer-events: none;
+        }
+
+        /* Cinematic Noise Overlay */
+        .bg-noise {
+            position: fixed; inset: 0; z-index: -2; opacity: 0.4; pointer-events: none; mix-blend-mode: overlay;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.5'/%3E%3C/svg%3E");
+        }
+        html.dark .bg-noise { opacity: 0.2; }
+
+        /* Animated Conic Border Glowing Box (The 1M$ look) */
+        .magic-border-wrap {
+            position: relative;
+            border-radius: 2.5rem;
+            padding: 1px; /* Border thickness */
+            overflow: hidden;
+            z-index: 1;
+            box-shadow: 0 40px 80px -20px rgba(0,0,0,0.1);
+        }
+        html.dark .magic-border-wrap { box-shadow: 0 40px 80px -20px rgba(0,0,0,0.8); }
+
+        .magic-border-wrap::before {
+            content: "";
+            position: absolute;
+            top: 50%; left: 50%; width: 200%; height: 200%;
+            background: conic-gradient(from 0deg, transparent 70%, #8b5cf6 85%, #3b82f6 100%);
+            animation: spin 4s linear infinite;
+            transform-origin: 0 0;
+            transform: translate(-50%, -50%);
+            opacity: 0; transition: opacity 0.5s ease;
+        }
+        
+        /* Subtle ambient glow on normal state, intense on hover */
+        .magic-border-wrap::after {
+            content: "";
+            position: absolute; inset: 0;
+            background: var(--glass-border);
+            border-radius: inherit; z-index: -1;
+        }
+
+        .magic-border-wrap:hover::before { opacity: 1; }
+
+        .inner-core {
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-radius: calc(2.5rem - 1px);
+            height: 100%; width: 100%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.15), inset 0 -1px 1px rgba(0,0,0,0.1);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* 3D Tilt Physics */
+        .tilt-card {
+            perspective: 1500px;
+            transform-style: preserve-3d;
+        }
+        .tilt-content {
+            transition: transform 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            will-change: transform;
+        }
+
+        /* Ultimate Hero Text */
+        .fluid-title {
+            font-size: clamp(4rem, 10vw, 12rem);
+            line-height: 0.85;
+            letter-spacing: -0.04em;
+        }
+        
+        .text-gradient {
+            background: linear-gradient(110deg, #a78bfa, #3b82f6, #f472b6, #a78bfa);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: gradient-x 6s ease infinite;
+        }
+
+        /* Physical Metal Button */
+        .btn-premium {
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px -10px var(--glow-color), inset 0 1px 1px rgba(255,255,255,0.4);
+        }
+        .btn-premium::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: translateX(-100%) skewX(-15deg);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        [data-lang] { display: none; }
+        .lang-active { display: inline; }
+        div.lang-active, section.lang-active, p.lang-active, h1.lang-active, h2.lang-active, h3.lang-active { display: block; }
+    </style>
+  <link rel="icon" type="image/png" href="favicon.png" />
+</head>
+<body class="antialiased selection:bg-accent-500 selection:text-white">
+
+    <!-- Cinematic Backgrounds -->
+    <canvas id="webgl-canvas"></canvas>
+    <div class="bg-noise"></div>
+    
+    <!-- Deep Ambient Glows -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-[-3]">
+        <div class="absolute w-[60vw] h-[60vw] max-w-[800px] max-h-[800px] bg-accent-500/20 dark:bg-accent-600/20 top-[-20%] left-[-10%] rounded-full blur-[120px] mix-blend-screen animate-[spin_20s_linear_infinite] origin-bottom-right"></div>
+        <div class="absolute w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] bg-blue-500/20 dark:bg-blue-600/20 bottom-[-10%] right-[-10%] rounded-full blur-[100px] mix-blend-screen animate-[spin_25s_linear_infinite_reverse] origin-top-left"></div>
+    </div>
+
+    <!-- Fluid Nav -->
+    <nav class="fixed top-8 left-1/2 -translate-x-1/2 z-50 w-max magic-border-wrap !rounded-full !shadow-[0_10px_30px_rgba(0,0,0,0.1)] dark:!shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+        <div class="inner-core !rounded-full px-8 py-3.5 flex items-center gap-10">
+            <div class="flex items-center gap-2 font-black text-xl tracking-tighter drop-shadow-md">
+                <i class="ph-bold ph-aperture text-accent-500 text-3xl"></i> CORTEX
+            </div>
+            <div class="hidden md:flex items-center gap-8 text-sm font-bold text-zinc-500 dark:text-zinc-400 tracking-wide uppercase">
+                <a href="#install" class="hover:text-zinc-900 dark:hover:text-white transition-colors">
+                    <span data-lang="ru">Установка</span><span data-lang="en">Install</span><span data-lang="zh">安装</span><span data-lang="es">Instalar</span><span data-lang="ja">インストール</span>
+                </a>
+                <a href="#features" class="hover:text-zinc-900 dark:hover:text-white transition-colors">
+                    <span data-lang="ru">Функции</span><span data-lang="en">Features</span><span data-lang="zh">功能</span><span data-lang="es">Funciones</span><span data-lang="ja">機能</span>
+                </a>
+                <a href="#faq" class="hover:text-zinc-900 dark:hover:text-white transition-colors">FAQ</a>
+            </div>
+            <div class="flex items-center gap-3 ml-2 pl-6 border-l border-zinc-200 dark:border-zinc-800">
+                <button onclick="toggleTheme()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800/80 transition-colors">
+                    <i id="theme-icon" class="ph-bold ph-sun text-xl"></i>
+                </button>
+                <div class="relative group cursor-pointer">
+                    <div class="w-10 h-10 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800/80 text-sm font-black uppercase hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors" id="current-lang">EN</div>
+                    <div class="absolute top-full right-0 mt-3 w-40 magic-border-wrap opacity-0 translate-y-4 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-400 !rounded-2xl">
+                        <div class="inner-core p-2 flex flex-col !rounded-[calc(1rem-1px)]">
+                            <button onclick="setLang('ru')" class="px-4 py-3 text-sm font-bold rounded-xl hover:bg-zinc-100/80 dark:hover:bg-zinc-800/80 text-left transition-colors">Русский</button>
+                            <button onclick="setLang('en')" class="px-4 py-3 text-sm font-bold rounded-xl hover:bg-zinc-100/80 dark:hover:bg-zinc-800/80 text-left transition-colors">English</button>
+                            <button onclick="setLang('zh')" class="px-4 py-3 text-sm font-bold rounded-xl hover:bg-zinc-100/80 dark:hover:bg-zinc-800/80 text-left transition-colors">中文</button>
+                            <button onclick="setLang('es')" class="px-4 py-3 text-sm font-bold rounded-xl hover:bg-zinc-100/80 dark:hover:bg-zinc-800/80 text-left transition-colors">Español</button>
+                            <button onclick="setLang('ja')" class="px-4 py-3 text-sm font-bold rounded-xl hover:bg-zinc-100/80 dark:hover:bg-zinc-800/80 text-left transition-colors">日本語</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="min-h-[100dvh] flex flex-col items-center justify-center pt-32 pb-24 px-6 text-center relative">
+        <div class="max-w-6xl mx-auto relative z-10 w-full">
+            <h1 class="fluid-title font-black mb-10 drop-shadow-2xl hero-text opacity-0 translate-y-12">
+                <span data-lang="ru">Ваше<br><span class="text-gradient drop-shadow-[0_0_60px_rgba(139,92,246,0.4)]">преимущество</span></span>
+                <span data-lang="en">Your<br><span class="text-gradient drop-shadow-[0_0_60px_rgba(139,92,246,0.4)]">advantage</span></span>
+                <span data-lang="zh">绝对<br><span class="text-gradient drop-shadow-[0_0_60px_rgba(139,92,246,0.4)]">优势</span></span>
+                <span data-lang="es">Tu<br><span class="text-gradient drop-shadow-[0_0_60px_rgba(139,92,246,0.4)]">ventaja</span></span>
+                <span data-lang="ja">圧倒的<br><span class="text-gradient drop-shadow-[0_0_60px_rgba(139,92,246,0.4)]">優位性</span></span>
+            </h1>
+            <p class="text-2xl md:text-4xl text-zinc-600 dark:text-zinc-300 font-medium max-w-4xl mx-auto mb-16 leading-tight drop-shadow-md hero-sub opacity-0 translate-y-8">
+                <span data-lang="ru">Локальный тулкит без установки. Выполняется прямо в браузере. Выжимайте максимум из каждого трейда на Axiom.</span>
+                <span data-lang="en">A local toolkit with no installation. Executes right in your browser. Squeeze the maximum out of every trade on Axiom.</span>
+                <span data-lang="zh">无需安装的本地工具包。直接在浏览器中执行。从 Axiom 的每笔交易中榨取最大利润。</span>
+                <span data-lang="es">Un kit local sin instalación. Se ejecuta en tu navegador. Exprime al máximo cada operación en Axiom.</span>
+                <span data-lang="ja">インストール不要のローカルツールキット。ブラウザ内で直接実行。Axiomの全トレードから最大利益を。</span>
+            </p>
+            
+            <div class="hero-btn opacity-0 translate-y-8 inline-flex">
+                <a class="bookmarklet btn-premium flex items-center gap-6 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-full pl-12 pr-4 py-4 transition-transform duration-500 ease-out hover:scale-105" href="#" data-style="">
+                    <span class="font-black text-2xl tracking-tight">
+                        <span data-lang="ru">Установить Cortex</span>
+                        <span data-lang="en">Install Cortex</span>
+                        <span data-lang="zh">安装 Cortex</span>
+                        <span data-lang="es">Instalar Cortex</span>
+                        <span data-lang="ja">Cortex をインストール</span>
+                    </span>
+                    <div class="w-16 h-16 rounded-full bg-white/20 dark:bg-black/10 flex items-center justify-center backdrop-blur-md">
+                        <i class="ph-bold ph-arrow-up-right text-3xl"></i>
+                    </div>
+                </a>
+            </div>
+            <p class="mt-10 text-sm font-black text-zinc-400 uppercase tracking-[0.2em] hero-sub opacity-0">
+                <span data-lang="ru">↑ Перетащите кнопку на панель закладок</span>
+                <span data-lang="en">↑ Drag button to bookmarks bar</span>
+                <span data-lang="zh">↑ 将按钮拖动到书签栏</span>
+                <span data-lang="es">↑ Arrastra el botón a la barra</span>
+                <span data-lang="ja">↑ ボタンをブックマークバーへ</span>
+            </p>
+        </div>
+    </section>
+
+    <!-- Z-Axis Cascade Install Sequence -->
+    <section id="install" class="py-40 relative z-10">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-7xl font-black tracking-tighter mb-40 text-center gsap-fade drop-shadow-xl">
+                <span data-lang="ru">Активация за 10 секунд</span>
+                <span data-lang="en">10-Second Activation</span>
+                <span data-lang="zh">10秒激活</span>
+                <span data-lang="es">Activación en 10 seg</span>
+                <span data-lang="ja">10秒でアクティベーション</span>
+            </h2>
+
+            <div class="stack-wrapper relative w-full max-w-6xl mx-auto">
+                <!-- Card 1 -->
+                <div class="stack-card sticky top-32 mb-40 magic-border-wrap w-full origin-top">
+                    <div class="inner-core p-16 md:p-24 flex flex-col md:flex-row gap-20 items-center">
+                        <div class="w-40 h-40 rounded-3xl bg-zinc-100/50 dark:bg-zinc-800/50 border border-zinc-200/50 dark:border-zinc-700/50 flex items-center justify-center shrink-0 shadow-inner backdrop-blur-xl rotate-3">
+                            <span class="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-br from-zinc-400 to-zinc-600 dark:from-zinc-100 dark:to-zinc-500">1</span>
+                        </div>
+                        <div>
+                            <h3 class="text-5xl font-black tracking-tight mb-8">
+                                <span data-lang="ru">Покажите панель</span><span data-lang="en">Show Bar</span><span data-lang="zh">显示书签栏</span><span data-lang="es">Mostrar barra</span><span data-lang="ja">バーを表示</span>
+                            </h3>
+                            <p class="text-3xl text-zinc-500 font-medium leading-normal">
+                                <span data-lang="en">Press <kbd class="font-mono bg-zinc-200/50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-600 px-4 py-2 rounded-xl shadow-lg text-zinc-900 dark:text-white mx-2">Ctrl+Shift+B</kbd> in your browser.</span>
+                                <span data-lang="ru">Нажмите <kbd class="font-mono bg-zinc-200/50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-600 px-4 py-2 rounded-xl shadow-lg text-zinc-900 dark:text-white mx-2">Ctrl+Shift+B</kbd> в браузере.</span>
+                                <span data-lang="zh">按 <kbd class="font-mono bg-zinc-200/50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-600 px-4 py-2 rounded-xl shadow-lg text-zinc-900 dark:text-white mx-2">Ctrl+Shift+B</kbd>。</span>
+                                <span data-lang="es">Presiona <kbd class="font-mono bg-zinc-200/50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-600 px-4 py-2 rounded-xl shadow-lg text-zinc-900 dark:text-white mx-2">Ctrl+Shift+B</kbd>.</span>
+                                <span data-lang="ja"><kbd class="font-mono bg-zinc-200/50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-600 px-4 py-2 rounded-xl shadow-lg text-zinc-900 dark:text-white mx-2">Ctrl+Shift+B</kbd> を押す。</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="stack-card sticky top-40 mb-40 magic-border-wrap w-full origin-top">
+                    <div class="inner-core p-16 md:p-24 flex flex-col md:flex-row gap-20 items-center">
+                        <div class="w-40 h-40 rounded-3xl bg-zinc-100/50 dark:bg-zinc-800/50 border border-zinc-200/50 dark:border-zinc-700/50 flex items-center justify-center shrink-0 shadow-inner backdrop-blur-xl -rotate-3">
+                            <span class="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-br from-zinc-400 to-zinc-600 dark:from-zinc-100 dark:to-zinc-500">2</span>
+                        </div>
+                        <div>
+                            <h3 class="text-5xl font-black tracking-tight mb-8">
+                                <span data-lang="ru">Перетащите</span><span data-lang="en">Drag & Drop</span><span data-lang="zh">拖放</span><span data-lang="es">Arrastrar y soltar</span><span data-lang="ja">ドラッグ＆ドロップ</span>
+                            </h3>
+                            <p class="text-3xl text-zinc-500 font-medium leading-normal">
+                                <span data-lang="en">Grab the glowing button from the top directly to the bookmarks bar.</span>
+                                <span data-lang="ru">Захватите кнопку из начала сайта на панель.</span>
+                                <span data-lang="zh">将网站顶部的黑色按钮拖到书签栏。</span>
+                                <span data-lang="es">Coge el botón negro y suéltalo en la barra.</span>
+                                <span data-lang="ja">上部のボタンをバーにドラッグ。</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="stack-card sticky top-48 mb-40 magic-border-wrap w-full origin-top">
+                    <div class="inner-core p-16 md:p-24 flex flex-col md:flex-row gap-20 items-center bg-gradient-to-br from-transparent to-accent-500/10 dark:to-accent-500/20">
+                        <div class="w-40 h-40 rounded-3xl bg-accent-500 text-white flex items-center justify-center shrink-0 shadow-[0_0_80px_rgba(139,92,246,0.6)] border border-accent-400 relative overflow-hidden rotate-3">
+                            <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent translate-x-[-100%] animate-[shimmer_2s_infinite]"></div>
+                            <i class="ph-bold ph-lightning text-7xl relative z-10 drop-shadow-md"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-5xl font-black tracking-tight mb-8">
+                                <span data-lang="ru">Кликните в Axiom</span><span data-lang="en">Click on Axiom</span><span data-lang="zh">在 Axiom 上点击</span><span data-lang="es">Clic en Axiom</span><span data-lang="ja">Axiomでクリック</span>
+                            </h3>
+                            <p class="text-3xl text-zinc-500 font-medium leading-normal">
+                                <span data-lang="en">Go to the terminal and click the bookmark to execute in milliseconds.</span>
+                                <span data-lang="ru">Перейдите на терминал и нажмите закладку.</span>
+                                <span data-lang="zh">转到终端并点击书签。</span>
+                                <span data-lang="es">Ve a la terminal y haz clic en el marcador.</span>
+                                <span data-lang="ja">ターミナルでブックマークをクリック。</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Editorial Split Architecture -->
+    <section class="py-40 max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-24 relative z-10">
+        <div class="flex flex-col justify-center">
+            <h2 class="text-6xl md:text-8xl font-black tracking-tighter mb-12 gsap-fade drop-shadow-2xl leading-[0.9]">
+                <span data-lang="en">Client-Side<br><span class="text-gradient">Architecture</span></span>
+                <span data-lang="ru">Клиентская<br><span class="text-gradient">Архитектура</span></span>
+                <span data-lang="zh">客户端<span class="text-gradient">架构</span></span>
+                <span data-lang="es">Arquitectura de<br><span class="text-gradient">Cliente</span></span>
+                <span data-lang="ja">クライアント<br><span class="text-gradient">アーキテクチャ</span></span>
+            </h2>
+            <p class="text-3xl text-zinc-500 font-medium leading-normal mb-12 gsap-fade">
+                <span data-lang="en">We ditched background extensions. Cortex runs purely within the Axiom tab context exactly when you activate it. Zero browser bloat, maximum privacy.</span>
+                <span data-lang="ru">Мы отказались от фоновых расширений. Cortex работает исключительно в контексте вкладки Axiom. Нулевая нагрузка, максимальная конфиденциальность.</span>
+                <span data-lang="zh">我们放弃了后台扩展。Cortex 仅在 Axiom 选项卡中运行。零膨胀，最大隐私。</span>
+                <span data-lang="es">Prescindimos de extensiones de fondo. Cortex se ejecuta en la pestaña Axiom. Cero carga, máxima privacidad.</span>
+                <span data-lang="ja">バックグラウンド拡張を廃止。CortexはAxiomタブ内で純粋に実行されます。</span>
+            </p>
+        </div>
+        <div class="grid grid-cols-1 gap-10 tilt-card">
+            <div class="magic-border-wrap gsap-fade tilt-content h-full">
+                <div class="inner-core p-16 h-full flex flex-col justify-center">
+                    <div class="w-24 h-24 rounded-3xl bg-zinc-100/80 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center mb-10 shadow-xl">
+                        <i class="ph-bold ph-cpu text-5xl text-zinc-900 dark:text-white"></i>
+                    </div>
+                    <h3 class="text-4xl font-black tracking-tight mb-6">Zero Bloat</h3>
+                    <p class="text-2xl text-zinc-500 font-medium">No background processes eating your RAM. Runs exactly 1 second.</p>
+                </div>
+            </div>
+            <div class="magic-border-wrap gsap-fade tilt-content h-full">
+                <div class="inner-core p-16 h-full flex flex-col justify-center">
+                    <div class="w-24 h-24 rounded-3xl bg-zinc-100/80 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center mb-10 shadow-[0_0_50px_rgba(139,92,246,0.3)]">
+                        <i class="ph-bold ph-shield-check text-5xl text-accent-500 drop-shadow-[0_0_15px_rgba(139,92,246,0.8)]"></i>
+                    </div>
+                    <h3 class="text-4xl font-black tracking-tight mb-6">Privacy First</h3>
+                    <p class="text-2xl text-zinc-500 font-medium">Code executes strictly client-side. No seed phrase access.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Asymmetrical Bento Features with 3D Tilt -->
+    <section id="features" class="py-40 relative z-10 overflow-hidden px-4 md:px-10">
+        <div class="max-w-[1400px] mx-auto">
+            <h2 class="text-7xl md:text-8xl font-black text-center tracking-tighter mb-32 gsap-fade drop-shadow-2xl">
+                <span data-lang="en">Professional's Arsenal</span>
+                <span data-lang="ru">Арсенал Профессионала</span>
+                <span data-lang="zh">专业人士的武器库</span>
+                <span data-lang="es">Arsenal de Profesionales</span>
+                <span data-lang="ja">プロの武器庫</span>
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-10 auto-rows-[450px]">
+                
+                <div class="tilt-card md:col-span-8 md:row-span-2 gsap-fade group">
+                    <div class="magic-border-wrap h-full tilt-content">
+                        <div class="inner-core p-20 flex flex-col justify-between relative overflow-hidden bg-gradient-to-br from-white/40 to-transparent dark:from-black/40 dark:to-transparent">
+                            <div class="relative z-10 max-w-3xl">
+                                <div class="w-24 h-24 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl flex items-center justify-center mb-12 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-6">
+                                    <i class="ph-bold ph-eye text-5xl text-accent-500"></i>
+                                </div>
+                                <h3 class="text-6xl font-black tracking-tighter mb-10 leading-[1.1]">
+                                    <span data-lang="en">Front-run the Market Makers</span>
+                                    <span data-lang="ru">Опережайте Маркет-Мейкеров</span>
+                                    <span data-lang="zh">抢跑做市商</span>
+                                    <span data-lang="es">Anticípate a los Market Makers</span>
+                                    <span data-lang="ja">マーケットメーカーの先を行く</span>
+                                </h3>
+                                <p class="text-3xl text-zinc-600 dark:text-zinc-400 font-medium leading-relaxed">
+                                    <span data-lang="en">Cortex analyzes the order book in real-time, highlighting hidden liquidity walls before the price moves.</span>
+                                    <span data-lang="ru">Анализирует стакан ордеров в реальном времени, высвечивая скрытые стенки ликвидности.</span>
+                                    <span data-lang="zh">实时分析订单簿，突出显示隐藏的流动性墙。</span>
+                                    <span data-lang="es">Analiza el libro de órdenes destacando muros de liquidez ocultos.</span>
+                                    <span data-lang="ja">オーダーブックをリアルタイム分析し、隠れた流動性の壁をハイライト。</span>
+                                </p>
+                            </div>
+                            <div class="absolute -right-40 -bottom-40 w-[800px] h-[800px] bg-accent-500/20 dark:bg-accent-500/40 blur-[120px] rounded-full transition-all duration-1000 group-hover:scale-150 group-hover:bg-accent-400/30"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tilt-card md:col-span-4 gsap-fade group">
+                    <div class="magic-border-wrap h-full tilt-content">
+                        <div class="inner-core p-16 flex flex-col justify-between bg-white/40 dark:bg-black/40">
+                            <i class="ph-bold ph-sword text-7xl text-zinc-900 dark:text-white transition-transform duration-700 group-hover:rotate-12 group-hover:scale-125 group-hover:drop-shadow-[0_10px_20px_rgba(0,0,0,0.2)] dark:group-hover:drop-shadow-[0_10px_20px_rgba(255,255,255,0.2)]"></i>
+                            <div>
+                                <h4 class="text-4xl font-black tracking-tight mb-6">Anti-MEV</h4>
+                                <p class="text-2xl text-zinc-500 font-medium">Private transaction routing protects you from sandwich bots.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tilt-card md:col-span-4 gsap-fade group">
+                    <div class="magic-border-wrap h-full tilt-content">
+                        <div class="inner-core p-16 flex flex-col justify-between bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900">
+                            <i class="ph-bold ph-faders text-7xl text-accent-400 dark:text-accent-600 transition-transform duration-700 group-hover:-rotate-12 group-hover:scale-125 group-hover:drop-shadow-[0_0_30px_rgba(139,92,246,0.6)]"></i>
+                            <div>
+                                <h4 class="text-4xl font-black tracking-tight mb-6">Customization</h4>
+                                <p class="text-zinc-400 dark:text-zinc-600 font-medium text-2xl">Clean the UI. Hide unnecessary panels, configure shortcuts.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="py-40 max-w-6xl mx-auto px-6 relative z-10">
+        <h2 class="text-7xl font-black text-center mb-32 tracking-tighter gsap-fade drop-shadow-2xl">FAQ</h2>
+        <div class="flex flex-col gap-8">
+            <!-- Q1 -->
+            <div class="magic-border-wrap gsap-fade faq-item cursor-pointer group">
+                <div class="inner-core bg-white/50 dark:bg-black/50 hover:bg-white/90 dark:hover:bg-zinc-900/90 transition-colors duration-500">
+                    <div class="px-12 py-10 flex justify-between items-center faq-header">
+                        <h4 class="text-3xl font-black tracking-tight">
+                            <span data-lang="en">How much does it cost?</span>
+                            <span data-lang="ru">Сколько это стоит?</span>
+                            <span data-lang="zh">要多少钱？</span>
+                            <span data-lang="es">¿Cuánto cuesta?</span>
+                            <span data-lang="ja">いくらですか？</span>
+                        </h4>
+                        <div class="w-16 h-16 rounded-3xl bg-zinc-200/50 dark:bg-zinc-800/50 border border-zinc-300 dark:border-zinc-700 flex items-center justify-center transition-all duration-500 icon-wrap group-hover:shadow-lg group-hover:bg-accent-500 group-hover:text-white group-hover:border-accent-400">
+                            <i class="ph-bold ph-plus text-3xl"></i>
+                        </div>
+                    </div>
+                    <div class="faq-content overflow-hidden max-h-0 opacity-0 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]">
+                        <div class="px-12 pb-12 text-2xl text-zinc-500 font-medium leading-relaxed border-t border-zinc-200/50 dark:border-zinc-800/50 pt-8 mt-2">
+                            <span data-lang="en">Cortex is a completely free tool. No subscriptions, no trials. We earn through integrations with partner exchanges.</span>
+                            <span data-lang="ru">Полностью бесплатный инструмент. Нет подписок. Мы зарабатываем за счет интеграций.</span>
+                            <span data-lang="zh">完全免费的工具。没有订阅。我们通过与交易所集成获利。</span>
+                            <span data-lang="es">Herramienta completamente gratuita. Sin suscripciones.</span>
+                            <span data-lang="ja">完全に無料のツールです。サブスクリプションはありません。</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Q2 -->
+            <div class="magic-border-wrap gsap-fade faq-item cursor-pointer group">
+                <div class="inner-core bg-white/50 dark:bg-black/50 hover:bg-white/90 dark:hover:bg-zinc-900/90 transition-colors duration-500">
+                    <div class="px-12 py-10 flex justify-between items-center faq-header">
+                        <h4 class="text-3xl font-black tracking-tight">
+                            <span data-lang="en">Do I need to install an extension?</span>
+                            <span data-lang="ru">Нужно ли устанавливать расширение?</span>
+                            <span data-lang="zh">我需要安装扩展程序吗？</span>
+                            <span data-lang="es">¿Necesito instalar una extensión?</span>
+                            <span data-lang="ja">拡張機能をインストールする必要がありますか？</span>
+                        </h4>
+                        <div class="w-16 h-16 rounded-3xl bg-zinc-200/50 dark:bg-zinc-800/50 border border-zinc-300 dark:border-zinc-700 flex items-center justify-center transition-all duration-500 icon-wrap group-hover:shadow-lg group-hover:bg-accent-500 group-hover:text-white group-hover:border-accent-400">
+                            <i class="ph-bold ph-plus text-3xl"></i>
+                        </div>
+                    </div>
+                    <div class="faq-content overflow-hidden max-h-0 opacity-0 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]">
+                        <div class="px-12 pb-12 text-2xl text-zinc-500 font-medium leading-relaxed border-t border-zinc-200/50 dark:border-zinc-800/50 pt-8 mt-2">
+                            <span data-lang="en">No. Cortex is a bookmarklet script. It runs for exactly 1 second when you click it.</span>
+                            <span data-lang="ru">Нет. Cortex — это скрипт-закладка. Он работает 1 секунду.</span>
+                            <span data-lang="zh">不。Cortex 是一个书签脚本。在您点击它时运行 1 秒。</span>
+                            <span data-lang="es">No. Cortex es un script de marcador. Se ejecuta exactamente 1 segundo.</span>
+                            <span data-lang="ja">いいえ。Cortex はブックマークレット スクリプトです。クリックした瞬間に1秒間実行されます。</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-24 px-6 mt-32 border-t border-zinc-200 dark:border-white/10 text-center md:text-left relative z-10 bg-white/10 dark:bg-black/10 backdrop-blur-3xl">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
+            <div class="flex items-center gap-4 font-black text-3xl tracking-tighter">
+                <i class="ph-bold ph-aperture text-accent-500 text-5xl drop-shadow-[0_0_15px_rgba(139,92,246,0.6)]"></i> CORTEX
+            </div>
+            <div class="flex gap-12 font-black text-lg text-zinc-500 uppercase tracking-widest">
+                <a href="#" class="hover:text-zinc-900 dark:hover:text-white transition-colors hover:scale-105 transform">Twitter</a>
+                <a href="#" class="hover:text-zinc-900 dark:hover:text-white transition-colors hover:scale-105 transform">Telegram</a>
+            </div>
+            <p class="text-sm font-bold text-zinc-400 uppercase tracking-[0.3em]">© 2026 Cortex Protocol</p>
+        </div>
+    </footer>
+
+    <script>
+        // 1. Translations (Unchanged)
+        let currentLang = localStorage.getItem('cortex-lang') || 'en';
+        const setLang = (lang) => {
+            currentLang = lang;
+            document.getElementById('current-lang').innerText = lang;
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                if (el.dataset.lang === lang) el.classList.add('lang-active');
+                else el.classList.remove('lang-active');
+            });
+            localStorage.setItem('cortex-lang', lang);
+        };
+        setLang(currentLang);
+
+        // 2. Theme (Unchanged logic, premium visual mapping)
+        const toggleTheme = () => {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = 'ph-bold ph-moon text-2xl';
+                localStorage.setItem('cortex-theme', 'light');
+            } else {
+                html.classList.add('dark');
+                icon.className = 'ph-bold ph-sun text-2xl text-accent-400 drop-shadow-[0_0_10px_rgba(139,92,246,0.8)]';
+                localStorage.setItem('cortex-theme', 'dark');
+            }
+        };
+        if (localStorage.getItem('cortex-theme') === 'dark' || (!localStorage.getItem('cortex-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            document.getElementById('theme-icon').className = 'ph-bold ph-sun text-2xl text-accent-400 drop-shadow-[0_0_10px_rgba(139,92,246,0.8)]';
+        } else {
+            document.getElementById('theme-icon').className = 'ph-bold ph-moon text-2xl';
+        }
+
+        // 3. Bookmarklet Design Hook (Unchanged)
+        const bml = document.querySelector('.bookmarklet');
+        if (bml && bml.dataset.style !== undefined) {
+            bml.className += ' ' + bml.dataset.style;
+        }
+
+        // 4. FAQ Toggle (Unchanged logic)
+        document.querySelectorAll('.faq-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const content = item.querySelector('.faq-content');
+                const icon = item.querySelector('.icon-wrap');
+                const isOpen = item.classList.contains('active');
+                
+                document.querySelectorAll('.faq-item').forEach(i => {
+                    i.classList.remove('active');
+                    i.querySelector('.faq-content').style.maxHeight = '0px';
+                    i.querySelector('.faq-content').style.opacity = '0';
+                    i.querySelector('.icon-wrap').style.transform = 'rotate(0deg)';
+                });
+
+                if (!isOpen) {
+                    item.classList.add('active');
+                    content.style.maxHeight = content.scrollHeight + 60 + 'px'; 
+                    content.style.opacity = '1';
+                    icon.style.transform = 'rotate(45deg)';
+                }
+            });
+        });
+
+        // 5. 3D Tilt Physics (Premium Hover)
+        document.querySelectorAll('.tilt-card').forEach(card => {
+            const content = card.querySelector('.tilt-content');
+            if(!content) return;
+            
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                // Max rotation 8 degrees
+                const rotateX = ((y - centerY) / centerY) * -8;
+                const rotateY = ((x - centerX) / centerX) * 8;
+                
+                content.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                content.style.transform = `rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+            });
+        });
+
+        // 6. Interactive Network Canvas Background
+        const canvas = document.getElementById('webgl-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+        let mouse = { x: -1000, y: -1000 };
+
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        window.addEventListener('mousemove', e => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+        window.addEventListener('mouseout', () => {
+            mouse.x = -1000;
+            mouse.y = -1000;
+        });
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.radius = Math.random() * 2 + 0.5;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+
+                // Mouse interaction
+                const dx = mouse.x - this.x;
+                const dy = mouse.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 150) {
+                    this.x -= dx * 0.02;
+                    this.y -= dy * 0.02;
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Generate particles based on screen size
+        const initParticles = () => {
+            particles = [];
+            const count = Math.floor((width * height) / 25000); // Responsive amount
+            for(let i=0; i<count; i++) particles.push(new Particle());
+        }
+        initParticles();
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Get current theme color from CSS variable
+            const isDark = document.documentElement.classList.contains('dark');
+            const rgb = isDark ? '255, 255, 255' : '0, 0, 0';
+            
+            ctx.fillStyle = `rgba(${rgb}, 0.2)`;
+            
+            for(let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                
+                // Draw connections
+                for(let j = i; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if(dist < 120) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(${rgb}, ${0.1 - dist/1200})`;
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateCanvas);
+        }
+        animateCanvas();
+
+        // 7. Cinema GSAP Animations
+        gsap.registerPlugin(ScrollTrigger);
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            
+            // Staggered Hero Reveal
+            const tl = gsap.timeline();
+            tl.to('.hero-text', { opacity: 1, y: 0, duration: 1.5, ease: "power4.out", delay: 0.2 })
+              .to('.hero-sub', { opacity: 1, y: 0, duration: 1.2, stagger: 0.2, ease: "power3.out" }, "-=1")
+              .to('.hero-btn', { opacity: 1, y: 0, duration: 1, ease: "back.out(1.5)" }, "-=0.8");
+
+            // Fade elements
+            gsap.utils.toArray('.gsap-fade').forEach(el => {
+                gsap.from(el, {
+                    opacity: 0, y: 80, duration: 1.5, ease: "power4.out",
+                    scrollTrigger: { trigger: el, start: "top 85%" }
+                });
+            });
+
+            // Sticky Stack Z-Axis (Unchanged magic)
+            const cards = gsap.utils.toArray('.stack-card');
+            cards.forEach((card, i) => {
+                if (i === cards.length - 1) return;
+                gsap.to(card, {
+                    scale: 0.8,
+                    opacity: 0.2,
+                    transformOrigin: "top center",
+                    ease: "none",
+                    scrollTrigger: {
+                        trigger: cards[i + 1],
+                        start: "top bottom",
+                        end: "top top",
+                        scrub: true
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
