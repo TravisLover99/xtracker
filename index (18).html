@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cortex Terminal | Institutional Dashboard</title>
+    
+    <!-- Scripts & Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
+                    colors: {
+                        dashboard: {
+                            bg: '#0f1115',
+                            panel: '#15181e',
+                            border: '#1f232b',
+                            text: '#8b949e',
+                            textHighlight: '#c9d1d9',
+                            accent: '#2f81f7',
+                            success: '#2ea043',
+                            danger: '#f85149',
+                            warning: '#d29922'
+                        },
+                        light: {
+                            bg: '#f6f8fa',
+                            panel: '#ffffff',
+                            border: '#d0d7de',
+                            text: '#57606a',
+                            textHighlight: '#24292f'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            transition: background-color 0.3s ease;
+        }
+        
+        .dash-panel {
+            background-color: theme('colors.light.panel');
+            border: 1px solid theme('colors.light.border');
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        html.dark .dash-panel {
+            background-color: theme('colors.dashboard.panel');
+            border-color: theme('colors.dashboard.border');
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .dash-text { color: theme('colors.light.text'); }
+        html.dark .dash-text { color: theme('colors.dashboard.text'); }
+        
+        .dash-title { color: theme('colors.light.textHighlight'); }
+        html.dark .dash-title { color: theme('colors.dashboard.textHighlight'); }
+
+        .dash-bg { background-color: theme('colors.light.bg'); }
+        html.dark .dash-bg { background-color: theme('colors.dashboard.bg'); }
+
+        /* Languages */
+        [data-lang] { display: none; }
+        .lang-active { display: inline; }
+        div.lang-active, section.lang-active, p.lang-active, h1.lang-active, h2.lang-active, h3.lang-active, h4.lang-active { display: block; }
+        .lang-flex.lang-active { display: flex; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: theme('colors.light.border'); border-radius: 4px; }
+        html.dark ::-webkit-scrollbar-thumb { background: theme('colors.dashboard.border'); }
+        
+        .status-dot {
+            animation: pulse-dot 2s infinite;
+        }
+        
+        @keyframes pulse-dot {
+            0% { box-shadow: 0 0 0 0 rgba(46, 160, 67, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(46, 160, 67, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(46, 160, 67, 0); }
+        }
+    </style>
+  <link rel="icon" type="image/png" href="favicon.png" />
+</head>
+<body class="antialiased h-screen overflow-hidden dash-bg text-sm font-sans flex">
+
+    <!-- Sidebar -->
+    <aside class="w-64 border-r border-light-border dark:border-dashboard-border dash-panel rounded-none flex-shrink-0 flex flex-col z-20 transition-colors duration-300">
+        <div class="h-16 flex items-center px-6 border-b border-light-border dark:border-dashboard-border">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-dashboard-accent rounded-md flex items-center justify-center text-white font-bold font-mono">C</div>
+                <span class="font-bold tracking-tight dash-title text-base">CORTEX<span class="text-dashboard-accent font-mono ml-1 text-xs">V2</span></span>
+            </div>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-1">
+            <div class="text-xs font-semibold uppercase tracking-wider text-light-text dark:text-dashboard-text mb-3 px-2">
+                <span data-lang="en">Platform</span>
+                <span data-lang="en">Платформа</span>
+                <span data-lang="zh">平台</span>
+                <span data-lang="es">Plataforma</span>
+                <span data-lang="ja">プラットフォーム</span>
+            </div>
+            
+            <a href="#" class="flex items-center gap-3 px-3 py-2 bg-light-border/50 dark:bg-dashboard-border/50 rounded-md dash-title font-medium transition-colors">
+                <i class="ph ph-squares-four text-lg"></i>
+                <span data-lang="en">Overview</span>
+                <span data-lang="en">Обзор</span>
+                <span data-lang="zh">概览</span>
+                <span data-lang="es">Resumen</span>
+                <span data-lang="ja">概要</span>
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2 dash-text hover:bg-light-border/30 dark:hover:bg-dashboard-border/30 rounded-md transition-colors">
+                <i class="ph ph-activity text-lg"></i>
+                <span data-lang="en">Market Data</span>
+                <span data-lang="en">Данные Рынка</span>
+                <span data-lang="zh">市场数据</span>
+                <span data-lang="es">Datos de Mercado</span>
+                <span data-lang="ja">市場データ</span>
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2 dash-text hover:bg-light-border/30 dark:hover:bg-dashboard-border/30 rounded-md transition-colors">
+                <i class="ph ph-lightning text-lg"></i>
+                <span data-lang="en">MEV Protection</span>
+                <span data-lang="en">MEV Защита</span>
+                <span data-lang="zh">MEV 保护</span>
+                <span data-lang="es">Protección MEV</span>
+                <span data-lang="ja">MEV 保護</span>
+            </a>
+            
+            <div class="mt-8 text-xs font-semibold uppercase tracking-wider text-light-text dark:text-dashboard-text mb-3 px-2 pt-4 border-t border-light-border dark:border-dashboard-border">
+                <span data-lang="en">Configuration</span>
+                <span data-lang="en">Конфигурация</span>
+                <span data-lang="zh">配置</span>
+                <span data-lang="es">Configuración</span>
+                <span data-lang="ja">設定</span>
+            </div>
+            
+            <a href="#" class="flex items-center gap-3 px-3 py-2 dash-text hover:bg-light-border/30 dark:hover:bg-dashboard-border/30 rounded-md transition-colors">
+                <i class="ph ph-plug text-lg text-dashboard-accent"></i>
+                <span data-lang="en">Setup Toolkit</span>
+                <span data-lang="en">Установка</span>
+                <span data-lang="zh">安装工具</span>
+                <span data-lang="es">Instalación</span>
+                <span data-lang="ja">インストール</span>
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2 dash-text hover:bg-light-border/30 dark:hover:bg-dashboard-border/30 rounded-md transition-colors">
+                <i class="ph ph-gear text-lg"></i>
+                <span data-lang="en">Settings</span>
+                <span data-lang="en">Настройки</span>
+                <span data-lang="zh">设置</span>
+                <span data-lang="es">Ajustes</span>
+                <span data-lang="ja">設定</span>
+            </a>
+        </nav>
+        
+        <div class="p-4 border-t border-light-border dark:border-dashboard-border">
+            <div class="flex items-center justify-between text-xs font-mono">
+                <span class="dash-text">Status: <span class="text-dashboard-success">Operational</span></span>
+                <div class="w-2 h-2 rounded-full bg-dashboard-success status-dot"></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        <!-- Top Header -->
+        <header class="h-16 dash-panel border-b border-light-border dark:border-dashboard-border rounded-none flex items-center justify-between px-8 z-10">
+            <div>
+                <h1 class="text-lg font-semibold dash-title">
+                    <span data-lang="en">Institutional Terminal Deployment</span>
+                    <span data-lang="en">Развертывание Институционального Терминала</span>
+                    <span data-lang="zh">机构终端部署</span>
+                    <span data-lang="es">Despliegue de Terminal Institucional</span>
+                    <span data-lang="ja">機関端末の展開</span>
+                </h1>
+            </div>
+            
+            <div class="flex items-center gap-6">
+                <!-- Theme Toggle -->
+                <button onclick="toggleTheme()" class="dash-text hover:dash-title transition-colors flex items-center justify-center w-8 h-8 rounded-md bg-light-border/20 dark:bg-dashboard-border/20">
+                    <i id="theme-icon" class="ph ph-moon text-lg"></i>
+                </button>
+                
+                <!-- Language Selector -->
+                <select onchange="setLang(this.value)" id="lang-select" class="bg-transparent border border-light-border dark:border-dashboard-border dash-text text-xs rounded-md px-2 py-1 outline-none focus:border-dashboard-accent">
+                    <option value="en">English (US)</option>
+                    <option value="ru">Русский</option>
+                    <option value="zh">中文</option>
+                    <option value="es">Español</option>
+                    <option value="ja">日本語</option>
+                </select>
+                
+                <div class="w-px h-6 bg-light-border dark:bg-dashboard-border"></div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden md:block">
+                        <div class="text-xs font-semibold dash-title">System Administrator</div>
+                        <div class="text-[10px] dash-text">Pro License</div>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-dashboard-border flex items-center justify-center text-dashboard-title font-bold">A</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Grid -->
+        <div class="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+            
+            <!-- Alert Banner -->
+            <div class="dash-panel border-l-4 border-l-dashboard-accent p-4 flex items-start gap-4">
+                <i class="ph-fill ph-info text-dashboard-accent text-xl mt-0.5"></i>
+                <div>
+                    <h3 class="font-medium dash-title">
+                        <span data-lang="en">Action Required: Toolkit Installation</span>
+                        <span data-lang="en">Требуется действие: Установка Тулкита</span>
+                        <span data-lang="zh">需要采取行动：工具包安装</span>
+                        <span data-lang="es">Acción Requerida: Instalación del Toolkit</span>
+                        <span data-lang="ja">アクションが必要です：ツールキットのインストール</span>
+                    </h3>
+                    <p class="dash-text text-xs mt-1">
+                        <span data-lang="en">Your instance of Cortex is pending initialization on Axiom. Please drag the installation script to your bookmarks bar to enable the connection.</span>
+                        <span data-lang="en">Ваш экземпляр Cortex ожидает инициализации на Axiom. Перетащите установочный скрипт на панель закладок для включения соединения.</span>
+                        <span data-lang="zh">您的 Cortex 实例正在等待在 Axiom 上初始化。请将安装脚本拖到书签栏以启用连接。</span>
+                        <span data-lang="es">Su instancia de Cortex está pendiente de inicialización en Axiom. Arrastre el script de instalación a su barra de marcadores para habilitar la conexión.</span>
+                        <span data-lang="ja">Cortex のインスタンスは Axiom での初期化を保留しています。接続を有効にするには、インストール スクリプトをブックマーク バーにドラッグしてください。</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Main Widgets Area -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Primary Action Widget: Bookmarklet -->
+                <div class="dash-panel p-6 lg:col-span-2 flex flex-col justify-between relative overflow-hidden">
+                    <div class="absolute right-0 top-0 w-64 h-64 bg-dashboard-accent opacity-5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+                    
+                    <div class="mb-8">
+                        <h2 class="text-xl font-semibold dash-title mb-2">
+                            <span data-lang="en">Deployment Script</span>
+                            <span data-lang="en">Скрипт Развертывания</span>
+                            <span data-lang="zh">部署脚本</span>
+                            <span data-lang="es">Script de Despliegue</span>
+                            <span data-lang="ja">展開スクリプト</span>
+                        </h2>
+                        <p class="dash-text max-w-lg">
+                            <span data-lang="en">Extract the bookmarklet payload to inject Cortex natively into the Axiom environment. Execution is isolated strictly to the client.</span>
+                            <span data-lang="en">Извлеките пейлоад закладки для нативной инъекции Cortex в среду Axiom. Выполнение изолировано строго на клиенте.</span>
+                            <span data-lang="zh">提取书签有效负载以将 Cortex 原生注入 Axiom 环境。执行严格隔离在客户端。</span>
+                            <span data-lang="es">Extraiga el payload del marcador para inyectar Cortex nativamente en el entorno de Axiom. La ejecución está aislada estrictamente al cliente.</span>
+                            <span data-lang="ja">ブックマークレットのペイロードを抽出して、CortexをAxiom環境にネイティブに注入します。実行は厳密にクライアントに分離されます。</span>
+                        </p>
+                    </div>
+
+                    <div class="bg-light-bg dark:bg-dashboard-bg border border-light-border dark:border-dashboard-border rounded-lg p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 text-xs font-mono dash-text mb-3">
+                                <i class="ph ph-terminal text-dashboard-accent"></i>
+                                <span>cortex_injector_v2.js</span>
+                                <span class="bg-light-border dark:bg-dashboard-border px-2 py-0.5 rounded text-[10px]">14.2 KB</span>
+                            </div>
+                            <div class="w-full bg-light-border dark:bg-dashboard-border h-2 rounded-full overflow-hidden">
+                                <div class="w-1/3 bg-dashboard-accent h-full rounded-full"></div>
+                            </div>
+                            <p class="text-xs dash-text mt-2 font-mono">Status: Awaiting injection...</p>
+                        </div>
+                        
+                        <div class="flex-shrink-0">
+                            <!-- THE BOOKMARKLET -->
+                            <a class="bookmarklet btn" href="#" data-style="inline-flex items-center gap-2 bg-dashboard-accent hover:bg-blue-500 text-white px-6 py-3 rounded-md font-semibold text-sm transition-colors shadow-lg shadow-dashboard-accent/20 cursor-move border border-blue-400 dark:border-blue-700">
+                                <i class="ph-bold ph-arrow-down-right"></i>
+                                <span data-lang="en">Drag to Bookmarks</span>
+                                <span data-lang="en">Перетащите в Закладки</span>
+                                <span data-lang="zh">拖到书签</span>
+                                <span data-lang="es">Arrastrar a Marcadores</span>
+                                <span data-lang="ja">ブックマークにドラッグ</span>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex items-start gap-4">
+                        <div class="w-6 h-6 rounded-full bg-dashboard-border flex items-center justify-center dash-text font-mono text-[10px] flex-shrink-0 mt-0.5">1</div>
+                        <p class="dash-text text-sm">
+                            <span data-lang="en">Press <strong>Ctrl+Shift+B</strong> (or Cmd+Shift+B) to ensure your bookmarks bar is visible.</span>
+                            <span data-lang="en">Нажмите <strong>Ctrl+Shift+B</strong> (или Cmd+Shift+B), чтобы показать панель закладок.</span>
+                            <span data-lang="zh">按 <strong>Ctrl+Shift+B</strong>（或 Cmd+Shift+B）以确保您的书签栏可见。</span>
+                            <span data-lang="es">Presione <strong>Ctrl+Shift+B</strong> (o Cmd+Shift+B) para asegurar que su barra de marcadores sea visible.</span>
+                            <span data-lang="ja"><strong>Ctrl+Shift+B</strong>（またはCmd+Shift+B）を押して、ブックマークバーが表示されていることを確認します。</span>
+                        </p>
+                    </div>
+                    <div class="mt-4 flex items-start gap-4">
+                        <div class="w-6 h-6 rounded-full bg-dashboard-border flex items-center justify-center dash-text font-mono text-[10px] flex-shrink-0 mt-0.5">2</div>
+                        <p class="dash-text text-sm">
+                            <span data-lang="en">Drag the blue button above into the bookmarks bar.</span>
+                            <span data-lang="en">Перетащите синюю кнопку выше на панель закладок.</span>
+                            <span data-lang="zh">将上面的蓝色按钮拖入书签栏。</span>
+                            <span data-lang="es">Arrastre el botón azul de arriba a la barra de marcadores.</span>
+                            <span data-lang="ja">上の青いボタンをブックマークバーにドラッグします。</span>
+                        </p>
+                    </div>
+                    <div class="mt-4 flex items-start gap-4">
+                        <div class="w-6 h-6 rounded-full bg-dashboard-border flex items-center justify-center dash-text font-mono text-[10px] flex-shrink-0 mt-0.5">3</div>
+                        <p class="dash-text text-sm">
+                            <span data-lang="en">Navigate to Axiom terminal and click the newly created bookmark to initialize.</span>
+                            <span data-lang="en">Перейдите в терминал Axiom и нажмите на созданную закладку для инициализации.</span>
+                            <span data-lang="zh">导航到 Axiom 终端并单击新创建的书签进行初始化。</span>
+                            <span data-lang="es">Navegue a la terminal de Axiom y haga clic en el marcador recién creado para inicializar.</span>
+                            <span data-lang="ja">Axiomターミナルに移動し、新しく作成したブックマークをクリックして初期化します。</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Secondary Widget: System Specs -->
+                <div class="dash-panel p-6 flex flex-col">
+                    <h3 class="font-medium dash-title mb-4 uppercase text-xs tracking-wider">
+                        <span data-lang="en">System Specifications</span>
+                        <span data-lang="en">Спецификации Системы</span>
+                        <span data-lang="zh">系统规格</span>
+                        <span data-lang="es">Especificaciones del Sistema</span>
+                        <span data-lang="ja">システム仕様</span>
+                    </h3>
+                    
+                    <div class="space-y-4 flex-1">
+                        <div class="flex justify-between items-center border-b border-light-border dark:border-dashboard-border pb-2">
+                            <span class="dash-text text-xs">Environment</span>
+                            <span class="dash-title text-xs font-mono">Client-Side (JS)</span>
+                        </div>
+                        <div class="flex justify-between items-center border-b border-light-border dark:border-dashboard-border pb-2">
+                            <span class="dash-text text-xs">Latency Overhead</span>
+                            <span class="text-dashboard-success text-xs font-mono">&lt; 2ms</span>
+                        </div>
+                        <div class="flex justify-between items-center border-b border-light-border dark:border-dashboard-border pb-2">
+                            <span class="dash-text text-xs">Memory Usage</span>
+                            <span class="dash-title text-xs font-mono">~14 MB</span>
+                        </div>
+                        <div class="flex justify-between items-center border-b border-light-border dark:border-dashboard-border pb-2">
+                            <span class="dash-text text-xs">Target Integration</span>
+                            <span class="dash-title text-xs font-mono">axiom.trade</span>
+                        </div>
+                        <div class="flex justify-between items-center border-b border-light-border dark:border-dashboard-border pb-2">
+                            <span class="dash-text text-xs">MEV Protection</span>
+                            <span class="text-dashboard-success text-xs font-mono">Active (Private RPC)</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 bg-light-border/30 dark:bg-dashboard-border/30 rounded p-3 text-[10px] font-mono dash-text break-all">
+                        // Security Signature<br>
+                        0x4a9b...7c21 [VERIFIED]<br>
+                        No external dependencies loaded.
+                    </div>
+                </div>
+
+                <!-- Market Data Chart Widget -->
+                <div class="dash-panel p-6 lg:col-span-3">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="font-medium dash-title uppercase text-xs tracking-wider">
+                            <span data-lang="en">Execution Latency (Simulation)</span>
+                            <span data-lang="en">Задержка Выполнения (Симуляция)</span>
+                            <span data-lang="zh">执行延迟（模拟）</span>
+                            <span data-lang="es">Latencia de Ejecución (Simulación)</span>
+                            <span data-lang="ja">実行遅延（シミュレーション）</span>
+                        </h3>
+                        <div class="flex gap-2">
+                            <span class="px-2 py-1 rounded bg-light-border dark:bg-dashboard-border text-[10px] dash-title font-mono">Cortex</span>
+                            <span class="px-2 py-1 rounded bg-light-border/30 dark:bg-dashboard-border/30 text-[10px] dash-text font-mono">Standard UI</span>
+                        </div>
+                    </div>
+                    
+                    <div class="h-48 w-full relative">
+                        <canvas id="latencyChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+            
+            <footer class="py-4 text-center">
+                <p class="dash-text text-xs">© 2026 Cortex Institutional Technologies</p>
+            </footer>
+        </div>
+    </main>
+
+    <script>
+        // --- Translations & Theme ---
+        let currentLang = localStorage.getItem('cortex-lang') || 'en';
+        const setLang = (lang) => {
+            currentLang = lang;
+            document.getElementById('lang-select').value = lang;
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                if (el.dataset.lang === lang) {
+                    el.classList.add('lang-active');
+                } else {
+                    el.classList.remove('lang-active');
+                }
+            });
+            localStorage.setItem('cortex-lang', lang);
+        };
+        // Initialize lang
+        setLang(currentLang);
+
+        const toggleTheme = () => {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = 'ph ph-moon text-lg';
+                localStorage.setItem('cortex-theme', 'light');
+            } else {
+                html.classList.add('dark');
+                icon.className = 'ph ph-sun text-lg';
+                localStorage.setItem('cortex-theme', 'dark');
+            }
+            updateChartTheme();
+        };
+
+        if (localStorage.getItem('cortex-theme') === 'light') {
+            document.documentElement.classList.remove('dark');
+            document.getElementById('theme-icon').className = 'ph ph-moon text-lg';
+        } else {
+            document.documentElement.classList.add('dark');
+            document.getElementById('theme-icon').className = 'ph ph-sun text-lg';
+        }
+
+        // --- Bookmarklet Design Hook ---
+        const bml = document.querySelector('.bookmarklet');
+        if (bml && bml.dataset.style) {
+            bml.className += ' ' + bml.dataset.style;
+        }
+
+        // --- Chart Initialization ---
+        let chartInstance = null;
+        function initChart() {
+            const ctx = document.getElementById('latencyChart').getContext('2d');
+            const isDark = document.documentElement.classList.contains('dark');
+            const gridColor = isDark ? '#1f232b' : '#d0d7de';
+            const textColor = isDark ? '#8b949e' : '#57606a';
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['10:00', '10:05', '10:10', '10:15', '10:20', '10:25', '10:30'],
+                    datasets: [
+                        {
+                            label: 'Cortex',
+                            data: [1.2, 1.5, 1.1, 1.4, 1.2, 1.3, 1.1],
+                            borderColor: '#2f81f7',
+                            backgroundColor: 'rgba(47, 129, 247, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Standard UI',
+                            data: [45, 60, 42, 85, 55, 50, 48],
+                            borderColor: isDark ? '#8b949e' : '#57606a',
+                            borderWidth: 1,
+                            borderDash: [5, 5],
+                            tension: 0.4,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: gridColor, drawBorder: false },
+                            ticks: { color: textColor, font: { family: 'JetBrains Mono' } }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { color: textColor, font: { family: 'JetBrains Mono' } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChartTheme() {
+            if (!chartInstance) return;
+            const isDark = document.documentElement.classList.contains('dark');
+            const gridColor = isDark ? '#1f232b' : '#d0d7de';
+            const textColor = isDark ? '#8b949e' : '#57606a';
+            
+            chartInstance.options.scales.y.grid.color = gridColor;
+            chartInstance.options.scales.y.ticks.color = textColor;
+            chartInstance.options.scales.x.ticks.color = textColor;
+            chartInstance.data.datasets[1].borderColor = isDark ? '#8b949e' : '#57606a';
+            
+            chartInstance.update();
+        }
+
+        // Initialize chart after a short delay to let fonts load
+        setTimeout(() => {
+            initChart();
+            // GSAP Animations
+            gsap.from(".dash-panel", {
+                y: 20,
+                opacity: 0,
+                duration: 0.6,
+                stagger: 0.1,
+                ease: "power2.out"
+            });
+        }, 100);
+    </script>
+</body>
+</html>

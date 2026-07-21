@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cortex | Gaming eSports Tool</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=Russo+One&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Chakra Petch', 'sans-serif'],
+                        display: ['Russo One', 'sans-serif']
+                    },
+                    colors: {
+                        accent: { DEFAULT: '#7C3AED', light: '#A78BFA' },
+                        cta: '#F43F5E',
+                        darkbg: '#0F0F23',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { 
+            background-color: #f1f5f9; color: #0f172a; 
+            transition: background-color 0.3s, color 0.3s; 
+            overflow-x: hidden;
+        }
+        html.dark body { 
+            background-color: #0F0F23; color: #E2E8F0; 
+        }
+
+        .crt::before {
+            content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 9999; background-size: 100% 2px, 3px 100%; pointer-events: none; opacity: 0.15;
+        }
+
+        .neon-text { text-shadow: 0 0 5px #7C3AED, 0 0 10px #7C3AED; }
+        .neon-box { 
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.4), inset 0 0 10px rgba(124, 58, 237, 0.2); 
+            border: 1px solid #7C3AED; 
+            background: rgba(15, 15, 35, 0.7);
+            backdrop-filter: blur(10px);
+        }
+        html:not(.dark) .neon-box {
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.2);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .neon-cta { 
+            box-shadow: 0 0 20px rgba(244, 63, 94, 0.6); 
+            border: 2px solid #F43F5E;
+        }
+
+        [data-lang] { display: none; }
+        .lang-active { display: inline-block; }
+        p.lang-active, h1.lang-active, h2.lang-active, h3.lang-active, div.lang-active { display: block; }
+        span.lang-active { display: inline; }
+
+        /* Glitch Animation */
+        @keyframes glitch {
+            0% { clip-path: inset(40% 0 61% 0); transform: translate(-2px, 2px); }
+            20% { clip-path: inset(92% 0 1% 0); transform: translate(1px, -2px); }
+            40% { clip-path: inset(43% 0 1% 0); transform: translate(2px, 2px); }
+            60% { clip-path: inset(25% 0 58% 0); transform: translate(-2px, -2px); }
+            80% { clip-path: inset(54% 0 7% 0); transform: translate(2px, -2px); }
+            100% { clip-path: inset(58% 0 43% 0); transform: translate(-1px, 2px); }
+        }
+        .glitch { position: relative; }
+        .glitch::before, .glitch::after {
+            content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: inherit; -webkit-background-clip: text; color: transparent;
+            pointer-events: none;
+        }
+        .glitch::before { left: 2px; text-shadow: -2px 0 #F43F5E; animation: glitch 3s infinite linear alternate-reverse; }
+        .glitch::after { left: -2px; text-shadow: -2px 0 #7C3AED; animation: glitch 4s infinite linear alternate-reverse; }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0F0F23; }
+        ::-webkit-scrollbar-thumb { background: #7C3AED; }
+        
+        .grid-bg {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(124, 58, 237, 0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(124, 58, 237, 0.1) 1px, transparent 1px);
+        }
+        html:not(.dark) .grid-bg {
+            background-image: 
+                linear-gradient(to right, rgba(124, 58, 237, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(124, 58, 237, 0.05) 1px, transparent 1px);
+        }
+
+        .cyber-floor {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 30vh;
+            background: linear-gradient(transparent, rgba(124,58,237,0.2) 100%);
+            transform: perspective(500px) rotateX(60deg);
+            transform-origin: bottom;
+            border-top: 1px solid rgba(124,58,237,0.5);
+        }
+        .cyber-floor::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-image: linear-gradient(90deg, rgba(124,58,237,0.2) 1px, transparent 1px), linear-gradient(rgba(124,58,237,0.2) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+    </style>
+  <link rel="icon" type="image/png" href="favicon.png" />
+</head>
+<body class="crt antialiased selection:bg-accent selection:text-white min-h-screen">
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center border-b border-accent/20 bg-white/80 dark:bg-darkbg/80 backdrop-blur-md transition-colors duration-500">
+        <div class="font-display text-2xl text-accent neon-text uppercase tracking-widest flex items-center gap-2">
+            <i class="ph-fill ph-game-controller"></i> CORTEX
+        </div>
+        <div class="flex items-center gap-4">
+            <button onclick="toggleTheme()" class="w-10 h-10 flex items-center justify-center border border-accent/30 rounded-none hover:bg-accent/10 transition text-accent">
+                <i id="theme-icon" class="ph-bold ph-sun text-xl"></i>
+            </button>
+            <div class="relative group">
+                <button class="w-10 h-10 flex items-center justify-center border border-accent/30 rounded-none hover:bg-accent/10 transition text-accent font-bold text-xs uppercase" id="current-lang">
+                    EN
+                </button>
+                <div class="absolute top-full right-0 mt-2 w-24 bg-white dark:bg-darkbg border border-accent/50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                    <button onclick="setLang('ru')" class="w-full py-2 text-center text-xs font-bold hover:bg-accent/20 text-slate-900 dark:text-white">RU</button>
+                    <button onclick="setLang('en')" class="w-full py-2 text-center text-xs font-bold hover:bg-accent/20 text-slate-900 dark:text-white">EN</button>
+                    <button onclick="setLang('zh')" class="w-full py-2 text-center text-xs font-bold hover:bg-accent/20 text-slate-900 dark:text-white">ZH</button>
+                    <button onclick="setLang('es')" class="w-full py-2 text-center text-xs font-bold hover:bg-accent/20 text-slate-900 dark:text-white">ES</button>
+                    <button onclick="setLang('ja')" class="w-full py-2 text-center text-xs font-bold hover:bg-accent/20 text-slate-900 dark:text-white">JA</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Horizontal Scroll Wrapper -->
+    <div class="overflow-hidden bg-white dark:bg-darkbg transition-colors duration-500 min-h-screen relative">
+        <div class="grid-bg fixed inset-0 z-0 opacity-50"></div>
+        <div class="cyber-floor fixed z-0"></div>
+
+        <div class="horizontal-wrapper w-full h-screen relative z-10 hidden md:block">
+            <div class="panel-container flex h-screen w-[400vw]">
+                
+                <!-- Panel 1: Hero -->
+                <section class="panel w-screen h-screen flex flex-col items-center justify-center px-10 relative">
+                    <div class="max-w-4xl text-center">
+                        <div class="inline-block border border-accent text-accent px-4 py-1 mb-6 font-bold text-xs uppercase tracking-[0.3em] bg-accent/10">
+                            <span data-lang="en">Игровая Мета</span><span data-lang="en">Gaming Meta</span><span data-lang="zh">游戏元数据</span><span data-lang="es">Meta de Juego</span><span data-lang="ja">ゲームメタ</span>
+                        </div>
+                        <h1 class="font-display text-6xl md:text-8xl mb-6 tracking-tight text-slate-900 dark:text-white uppercase glitch" data-text="Absolute Supremacy">
+                            <span data-lang="en">Абсолютное<br><span class="text-accent neon-text">Превосходство</span></span>
+                            <span data-lang="en">Absolute<br><span class="text-accent neon-text">Supremacy</span></span>
+                            <span data-lang="zh">绝对的<br><span class="text-accent neon-text">统治力</span></span>
+                            <span data-lang="es">Supremacía<br><span class="text-accent neon-text">Absoluta</span></span>
+                            <span data-lang="ja">絶対的<br><span class="text-accent neon-text">優位性</span></span>
+                        </h1>
+                        <p class="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-12">
+                            <span data-lang="en">Локальный тулкит. Выполняется прямо в браузере. Выжимайте максимум из каждого трейда на Axiom.</span>
+                            <span data-lang="en">A local toolkit. Executes right in your browser. Squeeze the maximum out of every trade on Axiom.</span>
+                            <span data-lang="zh">本地工具包。直接在浏览器中执行。从 Axiom 的每笔交易中榨取最大利润。</span>
+                            <span data-lang="es">Un kit de herramientas local. Se ejecuta directamente en tu navegador. Exprime al máximo cada operación en Axiom.</span>
+                            <span data-lang="ja">ローカルツールキット。ブラウザ内で直接実行。Axiomのすべてのトレードから最大限の利益を引き出します。</span>
+                        </p>
+                        
+                        <div class="flex flex-col items-center gap-4">
+                            <a class="bookmarklet" href="#" data-style="inline-flex items-center justify-center gap-3 bg-cta text-white font-display px-8 py-4 text-xl uppercase tracking-wider neon-cta hover:bg-cta/80 transition-all cursor-move border-2 border-cta">
+                                <i class="ph-bold ph-lightning text-2xl"></i>
+                                <span><span data-lang="en">Установить Cortex</span><span data-lang="en">Install Cortex</span><span data-lang="zh">安装 Cortex</span><span data-lang="es">Instalar Cortex</span><span data-lang="ja">Cortex をインストール</span></span>
+                            </a>
+                            <span class="text-xs text-slate-500 font-bold uppercase tracking-widest mt-2">
+                                <span data-lang="en">↑ Перетащите на панель закладок</span>
+                                <span data-lang="en">↑ Drag to bookmarks bar</span>
+                                <span data-lang="zh">↑ 拖动到书签栏</span>
+                                <span data-lang="es">↑ Arrastra a la barra de marcadores</span>
+                                <span data-lang="ja">↑ ブックマークバーにドラッグ</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-10 right-10 flex flex-col items-end opacity-50">
+                        <span class="font-display text-4xl text-accent">01</span>
+                        <span class="h-px w-16 bg-accent mt-2"></span>
+                    </div>
+                </section>
+
+                <!-- Panel 2: Features -->
+                <section class="panel w-screen h-screen flex items-center justify-center px-10 relative">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-6xl w-full">
+                        <div class="flex flex-col justify-center">
+                            <h2 class="font-display text-4xl md:text-6xl uppercase tracking-tighter text-slate-900 dark:text-white mb-6">
+                                <span data-lang="en">Радар<br><span class="text-accent">Ликвидности</span></span>
+                                <span data-lang="en">Liquidity<br><span class="text-accent">Radar</span></span>
+                                <span data-lang="zh">流动性<br><span class="text-accent">雷达</span></span>
+                                <span data-lang="es">Radar de<br><span class="text-accent">Liquidez</span></span>
+                                <span data-lang="ja">流動性<br><span class="text-accent">レーダー</span></span>
+                            </h2>
+                            <p class="text-slate-600 dark:text-slate-400 text-lg mb-8 border-l-2 border-accent pl-4">
+                                <span data-lang="en">Анализ стакана в реальном времени. Скрытые стенки ликвидности как на ладони. Опережайте алгоритмы.</span>
+                                <span data-lang="en">Real-time order book analysis. Hidden liquidity walls in plain sight. Front-run the algorithms.</span>
+                                <span data-lang="zh">实时订单簿分析。隐藏的流动性墙一目了然。抢跑算法。</span>
+                                <span data-lang="es">Análisis del libro de órdenes en tiempo real. Muros de liquidez ocultos a simple vista. Anticípate a los algoritmos.</span>
+                                <span data-lang="ja">リアルタイムのオーダーブック分析。隠れた流動性の壁が一目瞭然。アルゴリズムの先を行く。</span>
+                            </p>
+                            <ul class="space-y-4 font-bold text-slate-800 dark:text-slate-300 uppercase tracking-widest text-sm">
+                                <li class="flex items-center gap-3"><i class="ph-bold ph-check-square text-accent text-xl"></i> Anti-MEV Protection</li>
+                                <li class="flex items-center gap-3"><i class="ph-bold ph-check-square text-accent text-xl"></i> Zero Background Bloat</li>
+                                <li class="flex items-center gap-3"><i class="ph-bold ph-check-square text-accent text-xl"></i> 100% Client-Side</li>
+                            </ul>
+                        </div>
+                        <div class="relative flex items-center justify-center">
+                            <div class="neon-box w-full aspect-square md:aspect-auto md:h-full p-8 flex flex-col">
+                                <div class="flex justify-between items-center mb-6 border-b border-accent/30 pb-4">
+                                    <span class="font-display text-accent text-sm tracking-widest uppercase">Order Book.exe</span>
+                                    <div class="flex gap-2">
+                                        <div class="w-3 h-3 bg-accent/20"></div>
+                                        <div class="w-3 h-3 bg-accent/50"></div>
+                                        <div class="w-3 h-3 bg-accent"></div>
+                                    </div>
+                                </div>
+                                <div class="flex-1 flex flex-col gap-2 font-mono text-xs opacity-70">
+                                    <div class="flex justify-between text-red-500"><span>SELL 45.2K</span><span>$1,240.50</span></div>
+                                    <div class="flex justify-between text-red-500"><span>SELL 12.1K</span><span>$1,240.45</span></div>
+                                    <div class="flex justify-between text-red-500"><span>SELL 8.4K</span><span>$1,240.30</span></div>
+                                    <div class="my-4 h-px bg-accent/50 relative">
+                                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-darkbg px-2 text-slate-900 dark:text-white font-bold">$1,240.25</div>
+                                    </div>
+                                    <div class="flex justify-between text-emerald-500"><span>BUY 19.3K</span><span>$1,240.20</span></div>
+                                    <div class="flex justify-between text-emerald-500 bg-emerald-500/20 px-1 border border-emerald-500/50"><span>BUY 150.0K <i class="ph-fill ph-warning-circle ml-1"></i></span><span>$1,240.10</span></div>
+                                    <div class="flex justify-between text-emerald-500"><span>BUY 5.2K</span><span>$1,240.05</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-10 right-10 flex flex-col items-end opacity-50">
+                        <span class="font-display text-4xl text-accent">02</span>
+                        <span class="h-px w-16 bg-accent mt-2"></span>
+                    </div>
+                </section>
+
+                <!-- Panel 3: Installation -->
+                <section class="panel w-screen h-screen flex flex-col justify-center px-10 relative">
+                    <h2 class="font-display text-4xl md:text-6xl text-center uppercase tracking-tighter text-slate-900 dark:text-white mb-16 w-full">
+                        <span data-lang="en">Инициализация</span>
+                        <span data-lang="en">Initialization</span>
+                        <span data-lang="zh">初始化</span>
+                        <span data-lang="es">Inicialización</span>
+                        <span data-lang="ja">初期化</span>
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto w-full">
+                        <div class="neon-box p-8 flex flex-col items-center text-center">
+                            <div class="w-16 h-16 border-2 border-accent text-accent font-display text-2xl flex items-center justify-center mb-6 neon-text">01</div>
+                            <h3 class="font-bold text-xl uppercase mb-4 text-slate-900 dark:text-white">
+                                <span data-lang="en">Ctrl+Shift+B</span><span data-lang="en">Ctrl+Shift+B</span><span data-lang="zh">Ctrl+Shift+B</span><span data-lang="es">Ctrl+Shift+B</span><span data-lang="ja">Ctrl+Shift+B</span>
+                            </h3>
+                            <p class="text-slate-600 dark:text-slate-400 text-sm">
+                                <span data-lang="en">Отобразите панель закладок в вашем браузере.</span>
+                                <span data-lang="en">Show the bookmarks bar in your browser.</span>
+                                <span data-lang="zh">在浏览器中显示书签栏。</span>
+                                <span data-lang="es">Muestra la barra de marcadores en tu navegador.</span>
+                                <span data-lang="ja">ブラウザのブックマークバーを表示します。</span>
+                            </p>
+                        </div>
+                        <div class="neon-box p-8 flex flex-col items-center text-center">
+                            <div class="w-16 h-16 border-2 border-accent text-accent font-display text-2xl flex items-center justify-center mb-6 neon-text">02</div>
+                            <h3 class="font-bold text-xl uppercase mb-4 text-slate-900 dark:text-white">
+                                <span data-lang="en">Drag & Drop</span><span data-lang="en">Drag & Drop</span><span data-lang="zh">拖放</span><span data-lang="es">Arrastrar y soltar</span><span data-lang="ja">ドラッグ＆ドロップ</span>
+                            </h3>
+                            <p class="text-slate-600 dark:text-slate-400 text-sm">
+                                <span data-lang="en">Перетащите красную кнопку на панель закладок.</span>
+                                <span data-lang="en">Drag the red button to the bookmarks bar.</span>
+                                <span data-lang="zh">将红色按钮拖动到书签栏。</span>
+                                <span data-lang="es">Arrastra el botón rojo a la barra de marcadores.</span>
+                                <span data-lang="ja">赤いボタンをブックマークバーにドラッグします。</span>
+                            </p>
+                        </div>
+                        <div class="neon-box p-8 flex flex-col items-center text-center">
+                            <div class="w-16 h-16 border-2 border-accent text-accent font-display text-2xl flex items-center justify-center mb-6 neon-text">03</div>
+                            <h3 class="font-bold text-xl uppercase mb-4 text-slate-900 dark:text-white">
+                                <span data-lang="en">Execute</span><span data-lang="en">Execute</span><span data-lang="zh">执行</span><span data-lang="es">Ejecutar</span><span data-lang="ja">実行</span>
+                            </h3>
+                            <p class="text-slate-600 dark:text-slate-400 text-sm">
+                                <span data-lang="en">Перейдите на Axiom и нажмите закладку для активации.</span>
+                                <span data-lang="en">Go to Axiom and click the bookmark to activate.</span>
+                                <span data-lang="zh">转到 Axiom 并点击书签以激活。</span>
+                                <span data-lang="es">Ve a Axiom y haz clic en el marcador para activar.</span>
+                                <span data-lang="ja">Axiomに行き、ブックマークをクリックしてアクティベートします。</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-10 right-10 flex flex-col items-end opacity-50">
+                        <span class="font-display text-4xl text-accent">03</span>
+                        <span class="h-px w-16 bg-accent mt-2"></span>
+                    </div>
+                </section>
+
+                <!-- Panel 4: Footer CTA -->
+                <section class="panel w-screen h-screen flex flex-col items-center justify-center px-10 relative">
+                    <h2 class="font-display text-6xl md:text-8xl text-center uppercase tracking-tighter text-slate-900 dark:text-white mb-8">
+                        <span data-lang="en">Готовы к <span class="text-cta neon-text">игре</span>?</span>
+                        <span data-lang="en">Ready to <span class="text-cta neon-text">Play</span>?</span>
+                        <span data-lang="zh">准备好<span class="text-cta neon-text">开始</span>了吗？</span>
+                        <span data-lang="es">¿Listo para <span class="text-cta neon-text">Jugar</span>?</span>
+                        <span data-lang="ja"><span class="text-cta neon-text">プレイ</span>する準備はできましたか？</span>
+                    </h2>
+                    <p class="text-xl text-slate-600 dark:text-slate-400 mb-12 uppercase tracking-widest font-bold">
+                        <span data-lang="en">100% Бесплатно Навсегда</span>
+                        <span data-lang="en">100% Free Forever</span>
+                        <span data-lang="zh">100% 永久免费</span>
+                        <span data-lang="es">100% Gratis Para Siempre</span>
+                        <span data-lang="ja">永久に100%無料</span>
+                    </p>
+                    
+                    <a class="bookmarklet" href="#" data-style="inline-flex items-center justify-center gap-3 bg-cta text-white font-display px-10 py-5 text-2xl uppercase tracking-wider neon-cta hover:bg-transparent hover:text-cta border-2 border-cta transition-all">
+                        <i class="ph-bold ph-rocket-launch text-3xl"></i>
+                        <span><span data-lang="en">Начать</span><span data-lang="en">Get Started</span><span data-lang="zh">开始</span><span data-lang="es">Empezar</span><span data-lang="ja">始める</span></span>
+                    </a>
+
+                    <div class="absolute bottom-10 left-10 text-xs font-bold uppercase tracking-widest text-slate-500">
+                        © 2026 CORTEX PROTOCOL
+                    </div>
+                    <div class="absolute bottom-10 right-10 flex gap-4 text-accent text-xl">
+                        <a href="#" class="hover:text-slate-900 dark:hover:text-white transition"><i class="ph-fill ph-twitter-logo"></i></a>
+                        <a href="#" class="hover:text-slate-900 dark:hover:text-white transition"><i class="ph-fill ph-telegram-logo"></i></a>
+                        <a href="#" class="hover:text-slate-900 dark:hover:text-white transition"><i class="ph-fill ph-github-logo"></i></a>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+
+        <!-- Mobile Fallback (Vertical) -->
+        <div class="md:hidden flex flex-col pt-32 pb-20 px-6 gap-24 relative z-10">
+            <div class="text-center">
+                <div class="inline-block border border-accent text-accent px-4 py-1 mb-6 font-bold text-xs uppercase tracking-[0.3em] bg-accent/10">
+                    <span data-lang="en">Gaming Meta</span>
+                </div>
+                <h1 class="font-display text-5xl mb-6 uppercase text-slate-900 dark:text-white tracking-tight">
+                    <span data-lang="en">Абсолютное<br><span class="text-accent neon-text">Превосходство</span></span>
+                    <span data-lang="en">Absolute<br><span class="text-accent neon-text">Supremacy</span></span>
+                    <span data-lang="zh">绝对的<br><span class="text-accent neon-text">统治力</span></span>
+                    <span data-lang="es">Supremacía<br><span class="text-accent neon-text">Absoluta</span></span>
+                    <span data-lang="ja">絶対的<br><span class="text-accent neon-text">優位性</span></span>
+                </h1>
+                <p class="text-base text-slate-600 dark:text-slate-400 mb-8">
+                    <span data-lang="en">Локальный тулкит. Выполняется прямо в браузере. Выжимайте максимум из каждого трейда на Axiom.</span>
+                    <span data-lang="en">A local toolkit. Executes right in your browser. Squeeze the maximum out of every trade on Axiom.</span>
+                    <span data-lang="zh">本地工具包。直接在浏览器中执行。从 Axiom 的每笔交易中榨取最大利润。</span>
+                    <span data-lang="es">Un kit de herramientas local. Se ejecuta directamente en tu navegador. Exprime al máximo cada operación en Axiom.</span>
+                    <span data-lang="ja">ローカルツールキット。ブラウザ内で直接実行。Axiomのすべてのトレードから最大限の利益を引き出します。</span>
+                </p>
+                <a class="bookmarklet" href="#" data-style="inline-flex w-full justify-center items-center gap-2 bg-cta text-white font-display px-6 py-4 uppercase tracking-wider neon-cta border-2 border-cta">
+                    <i class="ph-bold ph-lightning"></i>
+                    <span><span data-lang="en">Установить</span><span data-lang="en">Install</span><span data-lang="zh">安装</span><span data-lang="es">Instalar</span><span data-lang="ja">インストール</span></span>
+                </a>
+            </div>
+
+            <div class="neon-box p-8">
+                <h2 class="font-display text-3xl uppercase text-slate-900 dark:text-white mb-4">
+                    <span data-lang="en">Радар Ликвидности</span>
+                    <span data-lang="en">Liquidity Radar</span>
+                    <span data-lang="zh">流动性雷达</span>
+                    <span data-lang="es">Radar de Liquidez</span>
+                    <span data-lang="ja">流動性レーダー</span>
+                </h2>
+                <p class="text-slate-600 dark:text-slate-400 text-sm mb-6 border-l-2 border-accent pl-3">
+                    <span data-lang="en">Анализ стакана в реальном времени.</span>
+                    <span data-lang="en">Real-time order book analysis.</span>
+                    <span data-lang="zh">实时订单簿分析。</span>
+                    <span data-lang="es">Análisis del libro de órdenes en tiempo real.</span>
+                    <span data-lang="ja">リアルタイムのオーダーブック分析。</span>
+                </p>
+                <ul class="space-y-3 font-bold text-slate-800 dark:text-slate-300 uppercase tracking-widest text-xs">
+                    <li class="flex items-center gap-2"><i class="ph-bold ph-check-square text-accent text-lg"></i> Anti-MEV Protection</li>
+                    <li class="flex items-center gap-2"><i class="ph-bold ph-check-square text-accent text-lg"></i> 100% Client-Side</li>
+                </ul>
+            </div>
+
+            <div class="text-center">
+                <h2 class="font-display text-4xl uppercase text-slate-900 dark:text-white mb-8">
+                    <span data-lang="en">Установка</span>
+                    <span data-lang="en">Install</span>
+                    <span data-lang="zh">安装</span>
+                    <span data-lang="es">Instalar</span>
+                    <span data-lang="ja">インストール</span>
+                </h2>
+                <div class="space-y-4">
+                    <div class="neon-box p-6 text-left flex items-center gap-4">
+                        <span class="text-accent font-display text-2xl neon-text">01</span>
+                        <div>
+                            <div class="font-bold uppercase text-slate-900 dark:text-white">Ctrl+Shift+B</div>
+                            <div class="text-xs text-slate-500 mt-1">Show bookmarks bar</div>
+                        </div>
+                    </div>
+                    <div class="neon-box p-6 text-left flex items-center gap-4">
+                        <span class="text-accent font-display text-2xl neon-text">02</span>
+                        <div>
+                            <div class="font-bold uppercase text-slate-900 dark:text-white">Drag Button</div>
+                            <div class="text-xs text-slate-500 mt-1">To the bookmarks bar</div>
+                        </div>
+                    </div>
+                    <div class="neon-box p-6 text-left flex items-center gap-4">
+                        <span class="text-accent font-display text-2xl neon-text">03</span>
+                        <div>
+                            <div class="font-bold uppercase text-slate-900 dark:text-white">Click in Axiom</div>
+                            <div class="text-xs text-slate-500 mt-1">Execute the script</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center pt-10 border-t border-accent/20">
+                <p class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">© 2026 CORTEX PROTOCOL</p>
+                <div class="flex justify-center gap-6 text-accent text-xl">
+                    <a href="#" class="hover:text-slate-900 dark:hover:text-white transition"><i class="ph-fill ph-twitter-logo"></i></a>
+                    <a href="#" class="hover:text-slate-900 dark:hover:text-white transition"><i class="ph-fill ph-telegram-logo"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Translations
+        let currentLang = localStorage.getItem('cortex-lang') || 'en';
+        const setLang = (lang) => {
+            currentLang = lang;
+            document.getElementById('current-lang').innerText = lang;
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                if (el.dataset.lang === lang) {
+                    el.classList.add('lang-active');
+                } else {
+                    el.classList.remove('lang-active');
+                }
+            });
+            localStorage.setItem('cortex-lang', lang);
+        };
+        setLang(currentLang);
+
+        // Theme Toggle
+        const toggleTheme = () => {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = 'ph-bold ph-moon text-xl';
+                localStorage.setItem('cortex-theme', 'light');
+            } else {
+                html.classList.add('dark');
+                icon.className = 'ph-bold ph-sun text-xl';
+                localStorage.setItem('cortex-theme', 'dark');
+            }
+        };
+
+        if (localStorage.getItem('cortex-theme') === 'dark' || (!localStorage.getItem('cortex-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            document.getElementById('theme-icon').className = 'ph-bold ph-sun text-xl';
+        } else {
+            document.documentElement.classList.remove('dark');
+            document.getElementById('theme-icon').className = 'ph-bold ph-moon text-xl';
+        }
+
+        // Bookmarklet Styling Hook
+        document.querySelectorAll('.bookmarklet').forEach(bml => {
+            if (bml.dataset.style) {
+                bml.className += ' ' + bml.dataset.style;
+            }
+        });
+
+        // GSAP Horizontal Scroll
+        gsap.registerPlugin(ScrollTrigger);
+        let mm = gsap.matchMedia();
+
+        mm.add("(min-width: 768px)", () => {
+            let sections = gsap.utils.toArray(".panel");
+            gsap.to(".panel-container", {
+                x: () => -(document.querySelector(".panel-container").scrollWidth - window.innerWidth),
+                ease: "none",
+                scrollTrigger: {
+                    trigger: ".horizontal-wrapper",
+                    pin: true,
+                    scrub: 1,
+                    snap: 1 / (sections.length - 1),
+                    end: () => "+=" + (document.querySelector(".panel-container").scrollWidth - window.innerWidth)
+                }
+            });
+        });
+    </script>
+</body>
+</html>

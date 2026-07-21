@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORTEX_SYS_ACCESS</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { mono: ['"Share Tech Mono"', 'monospace'] },
+                    colors: {
+                        neon: { pink: '#ff00ff', cyan: '#00ffff', green: '#00ff00', dark: '#0a0a0a' }
+                    },
+                    animation: {
+                        'flicker': 'flicker 0.15s infinite',
+                        'glitch': 'glitch 2s infinite',
+                        'scan': 'scan 8s linear infinite',
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    },
+                    keyframes: {
+                        flicker: {
+                            '0%, 19%, 21%, 23%, 25%, 54%, 56%, 100%': { opacity: 1 },
+                            '20%, 24%, 55%': { opacity: 0.5 }
+                        },
+                        glitch: {
+                            '0%': { transform: 'translate(0)' },
+                            '20%': { transform: 'translate(-2px, 1px)' },
+                            '40%': { transform: 'translate(-1px, -1px)' },
+                            '60%': { transform: 'translate(2px, 1px)' },
+                            '80%': { transform: 'translate(1px, -1px)' },
+                            '100%': { transform: 'translate(0)' }
+                        },
+                        scan: {
+                            '0%': { transform: 'translateY(-100%)' },
+                            '100%': { transform: 'translateY(100vh)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { 
+            font-family: 'Share Tech Mono', monospace; 
+            background-color: #000;
+            color: #00ffff;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* CRT effects */
+        .crt::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+        .scanline {
+            width: 100%;
+            height: 10px;
+            background: rgba(0, 255, 255, 0.1);
+            position: fixed;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        /* Glow classes */
+        .text-glow-cyan { text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff; }
+        .text-glow-pink { text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff; color: #ff00ff; }
+        .border-glow-cyan { box-shadow: 0 0 10px #00ffff, inset 0 0 10px #00ffff; border: 1px solid #00ffff; }
+        .border-glow-pink { box-shadow: 0 0 10px #ff00ff, inset 0 0 10px #ff00ff; border: 1px solid #ff00ff; }
+
+        /* Term layout */
+        .term-container {
+            border: 2px solid #00ffff;
+            background: rgba(0,25,25,0.8);
+            padding: 20px;
+            position: relative;
+        }
+
+        [data-lang] { display: none; }
+        .lang-active { display: inline; }
+        div.lang-active, section.lang-active, p.lang-active, h1.lang-active, h2.lang-active, h3.lang-active, span.lang-active { display: block; }
+        .lang-inline.lang-active { display: inline; }
+        .lang-flex.lang-active { display: flex; }
+
+        .bookmarklet-btn {
+            background: rgba(255, 0, 255, 0.2);
+            color: #ff00ff;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #ff00ff;
+            padding: 1rem 2rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: all 0.2s;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255,0,255,0.4), inset 0 0 10px rgba(255,0,255,0.2);
+        }
+        .bookmarklet-btn:hover {
+            background: #ff00ff;
+            color: #000;
+            box-shadow: 0 0 25px rgba(255,0,255,0.8), inset 0 0 20px rgba(255,0,255,0.5);
+            transform: scale(1.02);
+        }
+
+        /* FAQ */
+        .faq-content { max-height: 0; overflow: hidden; transition: max-height 0.2s ease; border-left: 2px solid #ff00ff; margin-left: 1rem; }
+        .faq-item.active .faq-content { padding-left: 1rem; margin-top: 1rem; margin-bottom: 1rem; }
+
+        /* Light mode overrides */
+        html:not(.dark) body { background-color: #f4f4f5; color: #000; }
+        html:not(.dark) .text-glow-cyan { text-shadow: none; color: #0055ff; }
+        html:not(.dark) .text-glow-pink { text-shadow: none; color: #cc00cc; }
+        html:not(.dark) .border-glow-cyan { box-shadow: none; border: 2px solid #0055ff; }
+        html:not(.dark) .border-glow-pink { box-shadow: none; border: 2px solid #cc00cc; }
+        html:not(.dark) .term-container { background: rgba(255,255,255,0.8); }
+        html:not(.dark) .crt::before { opacity: 0.1; }
+        html:not(.dark) .scanline { background: rgba(0,0,0,0.1); }
+        html:not(.dark) .bookmarklet-btn { 
+            background: #fff; color: #cc00cc; border: 2px solid #cc00cc; box-shadow: 4px 4px 0px rgba(204,0,204,0.3);
+        }
+        html:not(.dark) .bookmarklet-btn:hover {
+            background: #cc00cc; color: #fff; box-shadow: 6px 6px 0px rgba(204,0,204,0.4); transform: translate(-2px, -2px);
+        }
+
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #000; border-left: 1px solid #00ffff; }
+        ::-webkit-scrollbar-thumb { background: #00ffff; }
+        ::-webkit-scrollbar-thumb:hover { background: #ff00ff; }
+        html:not(.dark) ::-webkit-scrollbar-track { background: #f4f4f5; border-left: 1px solid #ccc; }
+        html:not(.dark) ::-webkit-scrollbar-thumb { background: #ccc; }
+        html:not(.dark) ::-webkit-scrollbar-thumb:hover { background: #999; }
+    </style>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+</head>
+<body class="crt min-h-screen flex flex-col p-4 md:p-8 selection:bg-neon-pink selection:text-black">
+    <div class="scanline animate-scan"></div>
+    
+    <!-- Top Bar -->
+    <header class="flex flex-wrap justify-between items-center border-b border-neon-cyan pb-4 mb-8">
+        <div class="flex items-center gap-4">
+            <div class="text-2xl font-bold text-glow-pink animate-flicker">CORTEX_OS</div>
+            <div class="hidden md:block text-sm">v. 4.0.9 // SYS_READY</div>
+        </div>
+        <div class="flex items-center gap-4 text-sm">
+            <button onclick="toggleTheme()" id="theme-toggle" class="hover:text-neon-pink transition-colors font-bold">[LIGHT_MODE]</button>
+            <span class="animate-pulse-fast">_REC</span>
+            <div>
+                LANG:
+                <button onclick="setLang('en')" class="hover:text-neon-pink transition-colors">EN</button> |
+                <button onclick="setLang('ru')" class="hover:text-neon-pink transition-colors">RU</button> |
+                <button onclick="setLang('zh')" class="hover:text-neon-pink transition-colors">ZH</button> |
+                <button onclick="setLang('es')" class="hover:text-neon-pink transition-colors">ES</button> |
+                <button onclick="setLang('ja')" class="hover:text-neon-pink transition-colors">JA</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow grid grid-cols-1 lg:grid-cols-12 gap-8 z-10 relative">
+        
+        <!-- Left Panel: Main Display -->
+        <div class="lg:col-span-8 space-y-8">
+            <div class="term-container border-glow-cyan">
+                <div class="absolute top-0 right-0 px-2 py-1 bg-neon-cyan text-black text-xs font-bold">ROOT_ACCESS</div>
+                <h1 class="text-4xl md:text-6xl font-bold mb-6 mt-4 uppercase animate-glitch text-glow-pink">
+                    <span data-lang="en" class="lang-inline">ВЗЛОМАЙ МАРКЕТ</span>
+                    <span data-lang="en" class="lang-inline">HACK THE MARKET</span>
+                    <span data-lang="zh" class="lang-inline">破解市场</span>
+                    <span data-lang="es" class="lang-inline">HACKEA EL MERCADO</span>
+                    <span data-lang="ja" class="lang-inline">市場をハックする</span>
+                </h1>
+                
+                <div class="mb-8 text-lg border-l-4 border-neon-cyan pl-4 py-2">
+                    <span data-lang="en">Локальный инжект без установки. Чистый JS эксплойт для извлечения профита на Axiom. Нулевой пинг, анти-сэндвич.</span>
+                    <span data-lang="en">Local inject, no install. Pure JS exploit to extract max profit on Axiom. Zero ping, anti-sandwich protection.</span>
+                    <span data-lang="zh">本地注入，无需安装。纯 JS 漏洞利用，在 Axiom 上获取最大利润。零延迟，防三明治攻击。</span>
+                    <span data-lang="es">Inyección local, sin instalación. Exploit puro JS para extraer el máximo beneficio en Axiom. Cero ping, anti-sándwich.</span>
+                    <span data-lang="ja">ローカルインジェクト、インストール不要。Axiomで最大の利益を抽出する純粋なJSエクスプロイト。ゼロピング、アンチサンドイッチ。</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-8">
+                    <div>> INITIALIZING... <span class="text-neon-pink">OK</span></div>
+                    <div>> BYPASS_SEC... <span class="text-neon-pink">OK</span></div>
+                    <div>> INJECT_READY... <span class="text-neon-pink">WAITING_FOR_USER</span></div>
+                    <div class="animate-pulse">> MEV_PROTECTION... ACTIVE</div>
+                </div>
+
+                <div class="p-6 border border-dashed border-neon-pink bg-neon-pink/10 flex flex-col items-center justify-center text-center">
+                    <p class="mb-4 font-bold text-glow-cyan text-xl">
+                        <span data-lang="en">ПРОТОКОЛ АКТИВАЦИИ</span>
+                        <span data-lang="en">ACTIVATION PROTOCOL</span>
+                        <span data-lang="zh">激活协议</span>
+                        <span data-lang="es">PROTOCOLO DE ACTIVACIÓN</span>
+                        <span data-lang="ja">アクティベーションプロトコル</span>
+                    </p>
+                    <p class="mb-6 text-sm">
+                        <span data-lang="en">1. Нажми CTRL+SHIFT+B<br>2. Перетащи кнопку ниже на панель<br>3. Кликни в терминале</span>
+                        <span data-lang="en">1. Press CTRL+SHIFT+B<br>2. Drag the button below to your bar<br>3. Click in terminal</span>
+                        <span data-lang="zh">1. 按 CTRL+SHIFT+B<br>2. 将下方按钮拖至状态栏<br>3. 在终端中点击</span>
+                        <span data-lang="es">1. Presiona CTRL+SHIFT+B<br>2. Arrastra el botón a tu barra<br>3. Clic en la terminal</span>
+                        <span data-lang="ja">1. CTRL+SHIFT+B を押す<br>2. 下のボタンをバーにドラッグ<br>3. ターミナルでクリック</span>
+                    </p>
+                    <a class="bookmarklet bookmarklet-btn text-xl" href="#" data-style="">
+                        <span data-lang="en">[ УСТАНОВИТЬ_CORTEX ]</span>
+                        <span data-lang="en">[ CORTEX.EXE_INSTALL ]</span>
+                        <span data-lang="zh">[ 安装_CORTEX ]</span>
+                        <span data-lang="es">[ INSTALAR_CORTEX ]</span>
+                        <span data-lang="ja">[ CORTEX_インストール ]</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Features Array -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="border border-neon-cyan p-4 hover:bg-neon-cyan/10 transition-colors">
+                    <h3 class="text-glow-pink font-bold text-xl mb-2">>> FRONT_RUN</h3>
+                    <p class="text-sm">
+                        <span data-lang="en">Анализ стакана в реальном времени. Видим стенки до изменения цены.</span>
+                        <span data-lang="en">Real-time orderbook analysis. We see walls before price moves.</span>
+                        <span data-lang="zh">实时订单簿分析。在价格变动前看到墙。</span>
+                        <span data-lang="es">Análisis del libro en tiempo real. Vemos muros antes de que se mueva el precio.</span>
+                        <span data-lang="ja">リアルタイムのオーダーブック分析。価格が動く前に壁が見えます。</span>
+                    </p>
+                </div>
+                <div class="border border-neon-cyan p-4 hover:bg-neon-cyan/10 transition-colors">
+                    <h3 class="text-glow-pink font-bold text-xl mb-2">>> ZERO_BLOAT</h3>
+                    <p class="text-sm">
+                        <span data-lang="en">Никаких расширений. Инжект работает только во время сессии.</span>
+                        <span data-lang="en">No extensions. Inject works only during active session.</span>
+                        <span data-lang="zh">没有扩展。注入仅在活动会话期间起作用。</span>
+                        <span data-lang="es">Sin extensiones. El inyect se ejecuta solo en sesión activa.</span>
+                        <span data-lang="ja">拡張機能なし。インジェクトはアクティブセッション中のみ機能します。</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Logs & FAQ -->
+        <div class="lg:col-span-4 space-y-8">
+            <div class="term-container border-glow-pink">
+                <div class="absolute top-0 right-0 px-2 py-1 bg-neon-pink text-black text-xs font-bold">INFO_DB</div>
+                <h2 class="text-2xl font-bold mb-4 text-glow-pink uppercase mt-2">QUERY_DB</h2>
+                
+                <div class="space-y-4 text-sm">
+                    <!-- FAQ 1 -->
+                    <div class="faq-item">
+                        <button class="faq-btn w-full text-left font-bold hover:text-neon-pink transition-colors focus:outline-none flex justify-between">
+                            <span data-lang="en">> СТОИМОСТЬ?</span>
+                            <span data-lang="en">> COST_TO_USE?</span>
+                            <span data-lang="zh">> 使用成本？</span>
+                            <span data-lang="es">> ¿COSTO?</span>
+                            <span data-lang="ja">> 使用コスト？</span>
+                        </button>
+                        <div class="faq-content text-gray-400">
+                            <span data-lang="en">0.00$. Навсегда. Монетизация через партнерские API.</span>
+                            <span data-lang="en">0.00$. Forever. Monetized via partner APIs.</span>
+                            <span data-lang="zh">0.00$。永远。通过合作伙伴 API 获利。</span>
+                            <span data-lang="es">0.00$. Para siempre. Monetizado vía APIs de socios.</span>
+                            <span data-lang="ja">0.00$。永遠に。パートナーAPIを通じて収益化。</span>
+                        </div>
+                    </div>
+                    <!-- FAQ 2 -->
+                    <div class="faq-item">
+                        <button class="faq-btn w-full text-left font-bold hover:text-neon-pink transition-colors focus:outline-none flex justify-between">
+                            <span data-lang="en">> НУЖНО СКАЧИВАТЬ?</span>
+                            <span data-lang="en">> DOWNLOAD_REQ?</span>
+                            <span data-lang="zh">> 需要下载吗？</span>
+                            <span data-lang="es">> ¿DESCARGA?</span>
+                            <span data-lang="ja">> ダウンロード？</span>
+                        </button>
+                        <div class="faq-content text-gray-400">
+                            <span data-lang="en">ОТРИЦАТЕЛЬНО. Это букмарклет. Только JS.</span>
+                            <span data-lang="en">NEGATIVE. Pure JS bookmarklet execution.</span>
+                            <span data-lang="zh">否定。纯 JS 书签执行。</span>
+                            <span data-lang="es">NEGATIVO. Ejecución pura JS desde marcador.</span>
+                            <span data-lang="ja">否定。純粋なJSブックマークレットの実行。</span>
+                        </div>
+                    </div>
+                    <!-- FAQ 3 -->
+                    <div class="faq-item">
+                        <button class="faq-btn w-full text-left font-bold hover:text-neon-pink transition-colors focus:outline-none flex justify-between">
+                            <span data-lang="en">> БЕЗОПАСНО?</span>
+                            <span data-lang="en">> SYSTEM_SAFE?</span>
+                            <span data-lang="zh">> 系统安全吗？</span>
+                            <span data-lang="es">> ¿SEGURO?</span>
+                            <span data-lang="ja">> システムは安全？</span>
+                        </button>
+                        <div class="faq-content text-gray-400">
+                            <span data-lang="en">ПОДТВЕРЖДЕНО. Выполняется локально. Нет доступа к ключам.</span>
+                            <span data-lang="en">CONFIRMED. Local execution. Zero private key access.</span>
+                            <span data-lang="zh">已确认。本地执行。零私钥访问。</span>
+                            <span data-lang="es">CONFIRMADO. Ejecución local. Cero acceso a claves privadas.</span>
+                            <span data-lang="ja">確認済み。ローカル実行。秘密鍵へのアクセスゼロ。</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fake Console Output -->
+            <div class="p-4 bg-neon-dark text-xs border border-neon-cyan/50 font-mono opacity-70">
+                <p class="text-neon-pink">root@cortex:~# tail -f /var/log/syslog</p>
+                <div id="fake-log" class="text-neon-green mt-2 h-32 overflow-hidden flex flex-col justify-end text-[#00ff00]">
+                    <!-- JS will populate -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-8 border-t border-neon-cyan/30 pt-4 flex justify-between text-xs text-neon-cyan/50 z-10 relative">
+        <div>[CORTEX_NET] ALL RIGHTS RESERVED 2026</div>
+        <div>ENCRYPTED CONNECTION</div>
+    </footer>
+
+    <script>
+        // Translations
+        let currentLang = localStorage.getItem('cortex-lang') || 'en';
+        const setLang = (lang) => {
+            currentLang = lang;
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                if (el.dataset.lang === lang) {
+                    el.classList.add('lang-active');
+                } else {
+                    el.classList.remove('lang-active');
+                }
+            });
+            localStorage.setItem('cortex-lang', lang);
+        };
+        setLang(currentLang);
+
+        // Theme Toggle
+        const toggleTheme = () => {
+            const html = document.documentElement;
+            const toggleBtn = document.getElementById('theme-toggle');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                toggleBtn.innerText = '[DARK_MODE]';
+                localStorage.setItem('cortex-theme', 'light');
+            } else {
+                html.classList.add('dark');
+                toggleBtn.innerText = '[LIGHT_MODE]';
+                localStorage.setItem('cortex-theme', 'dark');
+            }
+        };
+
+        const currentTheme = localStorage.getItem('cortex-theme');
+        const toggleBtn = document.getElementById('theme-toggle');
+        if (currentTheme === 'dark' || (!currentTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) || !currentTheme) {
+            document.documentElement.classList.add('dark');
+            if(toggleBtn) toggleBtn.innerText = '[LIGHT_MODE]';
+        } else {
+            document.documentElement.classList.remove('dark');
+            if(toggleBtn) toggleBtn.innerText = '[DARK_MODE]';
+        }
+
+        // Bookmarklet Design Hook
+        const bml = document.querySelector('.bookmarklet');
+        if (bml && bml.dataset.style) {
+            bml.className += ' ' + bml.dataset.style;
+        }
+
+        // FAQ Logic
+        document.querySelectorAll('.faq-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const item = btn.parentElement;
+                const content = item.querySelector('.faq-content');
+                const isOpen = item.classList.contains('active');
+
+                // Close all
+                document.querySelectorAll('.faq-item').forEach(i => {
+                    i.classList.remove('active');
+                    i.querySelector('.faq-content').style.maxHeight = '0px';
+                });
+
+                // Open clicked
+                if (!isOpen) {
+                    item.classList.add('active');
+                    content.style.maxHeight = content.scrollHeight + 20 + 'px'; // + padding
+                }
+            });
+        });
+
+        // Fake Terminal Logs
+        const logLines = [
+            "Intercepting mempool data...",
+            "Decrypting payload...",
+            "Scanning for MEV bots...",
+            "Routing transaction...",
+            "Bypassing node limits...",
+            "Validating signature...",
+            "Connection established.",
+            "Awaiting user input...",
+            "Syncing ledger state...",
+            "Injecting hooks..."
+        ];
+        const fakeLog = document.getElementById('fake-log');
+        setInterval(() => {
+            const line = document.createElement('div');
+            line.innerText = `[${new Date().toISOString().split('T')[1].slice(0,-1)}] ${logLines[Math.floor(Math.random() * logLines.length)]}`;
+            fakeLog.appendChild(line);
+            if(fakeLog.children.length > 5) {
+                fakeLog.removeChild(fakeLog.firstChild);
+            }
+        }, 1200);
+    </script>
+</body>
+</html>

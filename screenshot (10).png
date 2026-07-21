@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORTEX // AXIOM DEPLOYMENT</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #ffffff;
+            color: #000000;
+            margin: 0;
+            padding: 0;
+            border: 20px solid #000000;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        html.dark body {
+            background-color: #000000;
+            color: #ffffff;
+            border-color: #ffffff;
+        }
+        
+        [data-lang] { display: none; }
+        .lang-active { display: inline; }
+        div.lang-active, section.lang-active, p.lang-active, h1.lang-active, h2.lang-active, h3.lang-active { display: block; }
+        .lang-flex.lang-active { display: flex; }
+
+        /* Structural borders */
+        .grid-border { border: 2px solid #000; }
+        .grid-border-t { border-top: 2px solid #000; }
+        .grid-border-b { border-bottom: 2px solid #000; }
+        .grid-border-l { border-left: 2px solid #000; }
+        .grid-border-r { border-right: 2px solid #000; }
+
+        @media (min-width: 768px) {
+            .md\:grid-border-b-0 { border-bottom: none; }
+            .md\:grid-border-r { border-right: 2px solid #000; }
+            html.dark .md\:grid-border-r { border-color: #fff; }
+        }
+        @media (min-width: 1024px) {
+            .lg\:border-b-0 { border-bottom: none; }
+        }
+
+        html.dark .grid-border { border-color: #fff; }
+        html.dark .grid-border-t { border-color: #fff; }
+        html.dark .grid-border-b { border-color: #fff; }
+        html.dark .grid-border-l { border-color: #fff; }
+        html.dark .grid-border-r { border-color: #fff; }
+
+        /* Typography */
+        .swiss-title {
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.05em;
+            line-height: 0.85;
+        }
+
+        .bookmarklet-btn {
+            display: inline-block;
+            background: #000;
+            color: #fff;
+            text-transform: uppercase;
+            font-weight: 900;
+            padding: 1.5rem 3rem;
+            text-decoration: none;
+            letter-spacing: -0.02em;
+            transition: all 0.2s;
+        }
+        .bookmarklet-btn:hover {
+            background: #fff;
+            color: #000;
+            outline: 4px solid #000;
+            outline-offset: -4px;
+        }
+        html.dark .bookmarklet-btn {
+            background: #fff;
+            color: #000;
+        }
+        html.dark .bookmarklet-btn:hover {
+            background: #000;
+            color: #fff;
+            outline: 4px solid #fff;
+        }
+
+        /* FAQ */
+        .faq-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .faq-item.active .faq-content {
+            border-top: 2px solid #000;
+        }
+        html.dark .faq-item.active .faq-content {
+            border-top-color: #fff;
+        }
+    </style>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+</head>
+<body class="antialiased selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black">
+    <!-- Header -->
+    <header class="grid grid-cols-2 md:grid-cols-4 grid-border-b">
+        <div class="p-4 grid-border-r font-black tracking-tighter text-xl uppercase">CORTEX_</div>
+        <div class="p-4 grid-border-r hidden md:block text-sm font-bold uppercase">VERSION_1.0</div>
+        <div class="p-4 grid-border-r flex items-center justify-between">
+            <span class="text-sm font-bold uppercase hidden xl:inline">SYSTEM.LANG</span>
+            <div class="flex gap-2 text-xs font-bold uppercase">
+                <button onclick="setLang('en')" class="hover:underline">EN</button> /
+                <button onclick="setLang('ru')" class="hover:underline">RU</button> /
+                <button onclick="setLang('zh')" class="hover:underline">ZH</button> /
+                <button onclick="setLang('es')" class="hover:underline">ES</button> /
+                <button onclick="setLang('ja')" class="hover:underline">JA</button>
+            </div>
+        </div>
+        <div class="p-4 flex items-center justify-end">
+            <button onclick="toggleTheme()" class="text-sm font-bold uppercase hover:underline">
+                <span id="theme-text">THEME_SWITCH</span>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="grid grid-cols-1 lg:grid-cols-12 grid-border-b">
+            <div class="lg:col-span-8 p-8 md:p-16 lg:p-24 lg:grid-border-r flex flex-col justify-center grid-border-b lg:border-b-0 gsap-hero">
+                <p class="text-sm font-bold uppercase mb-8">
+                    <span data-lang="en">01. ПРЕИМУЩЕСТВО В AXIOM</span>
+                    <span data-lang="en">01. THE AXIOM ADVANTAGE</span>
+                    <span data-lang="zh">01. AXIOM 优势</span>
+                    <span data-lang="es">01. LA VENTAJA AXIOM</span>
+                    <span data-lang="ja">01. AXIOMの利点</span>
+                </p>
+                <h1 class="swiss-title text-7xl md:text-9xl lg:text-[140px] mb-8 break-words">
+                    <span data-lang="en">АБСОЛЮТНАЯ ТОЧНОСТЬ.</span>
+                    <span data-lang="en">ABSOLUTE PRECISION.</span>
+                    <span data-lang="zh">绝对精度.</span>
+                    <span data-lang="es">PRECISIÓN ABSOLUTA.</span>
+                    <span data-lang="ja">絶対的な精度.</span>
+                </h1>
+                <p class="text-xl md:text-2xl max-w-2xl font-medium leading-tight">
+                    <span data-lang="en">Локальный тулкит без установки софта. Выполняется прямо в браузере. Выжимайте максимум из каждого трейда.</span>
+                    <span data-lang="en">Local toolkit with no software installation. Executes right in your browser. Squeeze the maximum out of every trade.</span>
+                    <span data-lang="zh">无需安装软件的本地工具包。直接在浏览器中执行。从每笔交易中榨取最大利润。</span>
+                    <span data-lang="es">Kit de herramientas local sin instalación. Se ejecuta en tu navegador. Exprime al máximo cada operación.</span>
+                    <span data-lang="ja">ソフトウェアインストール不要のローカルツールキット。ブラウザで実行。すべてのトレードから最大限の利益を引き出します。</span>
+                </p>
+            </div>
+            <div class="lg:col-span-4 flex flex-col gsap-hero-right">
+                <div class="p-8 md:p-12 lg:p-16 grid-border-b flex-grow flex flex-col items-start justify-center">
+                    <h2 class="text-2xl font-bold uppercase mb-4 tracking-tight">INSTALLATION_</h2>
+                    <p class="mb-8 font-medium">
+                        <span data-lang="en">Перетащите кнопку на панель закладок, чтобы активировать скрипт в торговом терминале.</span>
+                        <span data-lang="en">Drag the button to your bookmarks bar to activate the script in the trading terminal.</span>
+                        <span data-lang="zh">将按钮拖动到书签栏以在交易终端中激活脚本。</span>
+                        <span data-lang="es">Arrastra el botón a tu barra de marcadores para activar el script en la terminal de trading.</span>
+                        <span data-lang="ja">ボタンをブックマークバーにドラッグして、取引端末でスクリプトをアクティブにします。</span>
+                    </p>
+                    <a class="bookmarklet bookmarklet-btn text-xl" href="#" data-style="">
+                        <span data-lang="en">CORTEX // УСТАНОВИТЬ</span>
+                        <span data-lang="en">CORTEX // INSTALL</span>
+                        <span data-lang="zh">CORTEX // 安装</span>
+                        <span data-lang="es">CORTEX // INSTALAR</span>
+                        <span data-lang="ja">CORTEX // インストール</span>
+                    </a>
+                </div>
+                <div class="p-8 bg-black text-white dark:bg-white dark:text-black">
+                    <h3 class="font-bold text-sm uppercase mb-2">STATUS:</h3>
+                    <p class="text-2xl font-black uppercase">100% FREE FOREVER</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features / Guide -->
+        <section class="grid grid-cols-1 md:grid-cols-3 grid-border-b">
+            <div class="p-8 md:p-12 grid-border-b md:grid-border-b-0 md:grid-border-r gsap-fade">
+                <h3 class="text-6xl font-black mb-4">I.</h3>
+                <h4 class="text-xl font-bold uppercase mb-4">
+                    <span data-lang="en">ПОКАЖИТЕ ПАНЕЛЬ</span>
+                    <span data-lang="en">SHOW BAR</span>
+                    <span data-lang="zh">显示书签栏</span>
+                    <span data-lang="es">MOSTRAR BARRA</span>
+                    <span data-lang="ja">バーを表示</span>
+                </h4>
+                <p class="font-medium text-lg">CTRL+SHIFT+B</p>
+            </div>
+            <div class="p-8 md:p-12 grid-border-b md:grid-border-b-0 md:grid-border-r gsap-fade">
+                <h3 class="text-6xl font-black mb-4">II.</h3>
+                <h4 class="text-xl font-bold uppercase mb-4">
+                    <span data-lang="en">ПЕРЕТАЩИТЕ</span>
+                    <span data-lang="en">DRAG & DROP</span>
+                    <span data-lang="zh">拖放</span>
+                    <span data-lang="es">ARRASTRAR</span>
+                    <span data-lang="ja">ドラッグ＆ドロップ</span>
+                </h4>
+                <p class="font-medium text-lg">
+                    <span data-lang="en">ЗАХВАТИТЕ КНОПКУ</span>
+                    <span data-lang="en">GRAB THE BUTTON</span>
+                    <span data-lang="zh">抓住按钮</span>
+                    <span data-lang="es">COGE EL BOTÓN</span>
+                    <span data-lang="ja">ボタンをつかむ</span>
+                </p>
+            </div>
+            <div class="p-8 md:p-12 gsap-fade">
+                <h3 class="text-6xl font-black mb-4">III.</h3>
+                <h4 class="text-xl font-bold uppercase mb-4">
+                    <span data-lang="en">КЛИК В AXIOM</span>
+                    <span data-lang="en">CLICK IN AXIOM</span>
+                    <span data-lang="zh">在 AXIOM 点击</span>
+                    <span data-lang="es">CLIC EN AXIOM</span>
+                    <span data-lang="ja">AXIOMでクリック</span>
+                </h4>
+                <p class="font-medium text-lg">
+                    <span data-lang="en">АКТИВАЦИЯ В ТЕРМИНАЛЕ</span>
+                    <span data-lang="en">ACTIVATE IN TERMINAL</span>
+                    <span data-lang="zh">在终端中激活</span>
+                    <span data-lang="es">ACTIVAR EN TERMINAL</span>
+                    <span data-lang="ja">端末でアクティブ化</span>
+                </p>
+            </div>
+        </section>
+
+        <!-- Architect / Details -->
+        <section class="grid grid-cols-1 lg:grid-cols-2">
+            <div class="p-8 md:p-16 lg:p-24 grid-border-b lg:grid-border-b-0 lg:grid-border-r flex flex-col justify-center">
+                <h2 class="swiss-title text-5xl md:text-7xl mb-8">
+                    <span data-lang="en">АРХИТЕКТУРА</span>
+                    <span data-lang="en">ARCHITECTURE</span>
+                    <span data-lang="zh">架构</span>
+                    <span data-lang="es">ARQUITECTURA</span>
+                    <span data-lang="ja">アーキテクチャ</span>
+                </h2>
+                <p class="text-xl font-medium leading-tight mb-8">
+                    <span data-lang="en">Мы отказались от фоновых расширений. Cortex работает исключительно в контексте вкладки Axiom ровно тогда, когда вы его активируете. Нулевая нагрузка на браузер, максимальная конфиденциальность.</span>
+                    <span data-lang="en">We ditched background extensions. Cortex runs purely within the Axiom tab context exactly when you activate it. Zero browser bloat, maximum privacy.</span>
+                    <span data-lang="zh">我们放弃了后台扩展。Cortex 仅在您激活它时在 Axiom 选项卡上下文中运行。零浏览器臃肿，最大的隐私。</span>
+                    <span data-lang="es">Prescindimos de extensiones en segundo plano. Cortex se ejecuta puramente dentro del contexto de la pestaña Axiom exactamente cuando lo activas. Cero carga, máxima privacidad.</span>
+                    <span data-lang="ja">バックグラウンド拡張機能を廃止しました。Cortex はアクティブにしたときにのみ、Axiom タブのコンテキスト内で純粋に実行されます。ブラウザの肥大化ゼロ、最大のプライバシー。</span>
+                </p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="grid-border p-4">
+                        <h4 class="font-bold text-sm uppercase mb-2">BROWSER_NATIVE</h4>
+                        <p class="text-xs font-bold uppercase">Vanilla JavaScript injection.</p>
+                    </div>
+                    <div class="grid-border p-4">
+                        <h4 class="font-bold text-sm uppercase mb-2">ANTI_MEV</h4>
+                        <p class="text-xs font-bold uppercase">Private transaction routing.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex flex-col">
+                <div class="p-8 bg-black text-white dark:bg-white dark:text-black grid-border-b">
+                    <h2 class="text-3xl font-black uppercase">FAQ_</h2>
+                </div>
+                <!-- FAQ Item -->
+                <div class="faq-item grid-border-b">
+                    <button class="faq-btn w-full p-6 text-left font-bold text-xl uppercase hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors flex justify-between items-center">
+                        <span data-lang="en">СКОЛЬКО СТОИТ?</span>
+                        <span data-lang="en">COST?</span>
+                        <span data-lang="zh">费用？</span>
+                        <span data-lang="es">¿COSTO?</span>
+                        <span data-lang="ja">費用？</span>
+                        <span class="text-2xl font-black faq-icon">+</span>
+                    </button>
+                    <div class="faq-content">
+                        <div class="p-6 text-lg font-medium leading-tight">
+                            <span data-lang="en">Полностью бесплатно. Мы зарабатываем на партнерских интеграциях.</span>
+                            <span data-lang="en">Completely free. We earn through partner integrations.</span>
+                            <span data-lang="zh">完全免费。我们通过合作伙伴集成获利。</span>
+                            <span data-lang="es">Totalmente gratis. Ganamos a través de integraciones.</span>
+                            <span data-lang="ja">完全無料。提携先との統合で収益を上げています。</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- FAQ Item -->
+                <div class="faq-item grid-border-b">
+                    <button class="faq-btn w-full p-6 text-left font-bold text-xl uppercase hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors flex justify-between items-center">
+                        <span data-lang="en">НУЖНО ЛИ РАСШИРЕНИЕ?</span>
+                        <span data-lang="en">EXTENSION NEEDED?</span>
+                        <span data-lang="zh">需要扩展吗？</span>
+                        <span data-lang="es">¿EXTENSIÓN?</span>
+                        <span data-lang="ja">拡張機能？</span>
+                        <span class="text-2xl font-black faq-icon">+</span>
+                    </button>
+                    <div class="faq-content">
+                        <div class="p-6 text-lg font-medium leading-tight">
+                            <span data-lang="en">Нет. Это скрипт-закладка. Работает 1 секунду по клику.</span>
+                            <span data-lang="en">No. It's a bookmarklet. Runs for 1 second on click.</span>
+                            <span data-lang="zh">不。这是一个书签。点击运行1秒钟。</span>
+                            <span data-lang="es">No. Es un marcador. Se ejecuta 1 segundo al hacer clic.</span>
+                            <span data-lang="ja">いいえ。ブックマークレットです。クリック時に1秒間実行。</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- FAQ Item -->
+                <div class="faq-item">
+                    <button class="faq-btn w-full p-6 text-left font-bold text-xl uppercase hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors flex justify-between items-center">
+                        <span data-lang="en">БЕЗОПАСНОСТЬ?</span>
+                        <span data-lang="en">SAFE?</span>
+                        <span data-lang="zh">安全？</span>
+                        <span data-lang="es">¿SEGURO?</span>
+                        <span data-lang="ja">安全？</span>
+                        <span class="text-2xl font-black faq-icon">+</span>
+                    </button>
+                    <div class="faq-content">
+                        <div class="p-6 text-lg font-medium leading-tight">
+                            <span data-lang="en">Выполняется на клиенте. Нет доступа к сидам.</span>
+                            <span data-lang="en">Client-side execution. No access to seed phrases.</span>
+                            <span data-lang="zh">客户端执行。无权访问助记词。</span>
+                            <span data-lang="es">Ejecución en el cliente. Sin acceso a semillas.</span>
+                            <span data-lang="ja">クライアントサイドで実行。シードへのアクセスなし。</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="p-6 grid-border-t flex flex-col md:flex-row justify-between items-center text-sm font-bold uppercase">
+        <div>© 2026 CORTEX_PROTOCOL</div>
+        <div class="flex gap-4 mt-4 md:mt-0">
+            <a href="#" class="hover:underline">TWITTER</a>
+            <a href="#" class="hover:underline">TELEGRAM</a>
+        </div>
+    </footer>
+
+    <script>
+        // Translations
+        let currentLang = localStorage.getItem('cortex-lang') || 'en';
+        const setLang = (lang) => {
+            currentLang = lang;
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                if (el.dataset.lang === lang) {
+                    el.classList.add('lang-active');
+                } else {
+                    el.classList.remove('lang-active');
+                }
+            });
+            localStorage.setItem('cortex-lang', lang);
+        };
+        setLang(currentLang);
+
+        // Theme
+        const toggleTheme = () => {
+            const html = document.documentElement;
+            const themeText = document.getElementById('theme-text');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                themeText.innerText = 'THEME: LIGHT';
+                localStorage.setItem('cortex-theme', 'light');
+            } else {
+                html.classList.add('dark');
+                themeText.innerText = 'THEME: DARK';
+                localStorage.setItem('cortex-theme', 'dark');
+            }
+        };
+
+        const currentTheme = localStorage.getItem('cortex-theme');
+        const themeText = document.getElementById('theme-text');
+        if (currentTheme === 'dark' || (!currentTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            themeText.innerText = 'THEME: DARK';
+        } else {
+            themeText.innerText = 'THEME: LIGHT';
+        }
+
+        // Bookmarklet Design Hook
+        const bml = document.querySelector('.bookmarklet');
+        if (bml && bml.dataset.style) {
+            bml.className += ' ' + bml.dataset.style;
+        }
+
+        // FAQ Logic
+        document.querySelectorAll('.faq-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const item = btn.parentElement;
+                const content = item.querySelector('.faq-content');
+                const icon = btn.querySelector('.faq-icon');
+                const isOpen = item.classList.contains('active');
+
+                // Close all
+                document.querySelectorAll('.faq-item').forEach(i => {
+                    i.classList.remove('active');
+                    i.querySelector('.faq-content').style.maxHeight = '0px';
+                    i.querySelector('.faq-icon').innerText = '+';
+                });
+
+                // Open clicked
+                if (!isOpen) {
+                    item.classList.add('active');
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                    icon.innerText = '-';
+                }
+            });
+        });
+
+        // Animations
+        if (typeof gsap !== 'undefined') {
+            gsap.registerPlugin(ScrollTrigger);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                gsap.from('.gsap-hero', { opacity: 0, x: -50, duration: 1, ease: 'power3.out' });
+                gsap.from('.gsap-hero-right', { opacity: 0, x: 50, duration: 1, ease: 'power3.out', delay: 0.2 });
+                
+                gsap.utils.toArray('.gsap-fade').forEach(el => {
+                    gsap.from(el, {
+                        opacity: 0, y: 30, duration: 0.8, ease: 'power2.out',
+                        scrollTrigger: { trigger: el, start: 'top 85%' }
+                    });
+                });
+            }
+        }
+    </script>
+</body>
+</html>

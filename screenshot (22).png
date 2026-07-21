@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cortex Pro | The Ultimate Edge</title>
+    
+    <!-- Scripts & Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+                    },
+                    colors: {
+                        apple: {
+                            dark: '#000000',
+                            darkSecondary: '#1d1d1f',
+                            darkText: '#f5f5f7',
+                            darkTextMuted: '#86868b',
+                            light: '#fbfbfd',
+                            lightSecondary: '#ffffff',
+                            lightText: '#1d1d1f',
+                            lightTextMuted: '#86868b',
+                            blue: '#0066cc',
+                            blueHover: '#0077ed'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Apple-esque typographic scale and resets */
+        body {
+            transition: background-color 0.5s ease, color 0.5s ease;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .theme-bg { background-color: theme('colors.apple.light'); }
+        html.dark .theme-bg { background-color: theme('colors.apple.dark'); }
+
+        .theme-text { color: theme('colors.apple.lightText'); }
+        html.dark .theme-text { color: theme('colors.apple.darkText'); }
+
+        .theme-text-muted { color: theme('colors.apple.lightTextMuted'); }
+        html.dark .theme-text-muted { color: theme('colors.apple.darkTextMuted'); }
+
+        /* Full-screen Scroll Snapping */
+        .scroll-container {
+            height: 100vh;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+            /* Hide scrollbar */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .scroll-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scroll-section {
+            height: 100vh;
+            width: 100%;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Languages */
+        [data-lang] { display: none; }
+        .lang-active { display: inline; }
+        div.lang-active, section.lang-active, p.lang-active, h1.lang-active, h2.lang-active, h3.lang-active, span.lang-active { display: block; }
+        .lang-flex.lang-active { display: flex; }
+
+        /* Animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .gradient-text {
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-image: linear-gradient(90deg, #32C5FF, #B620E0, #F7B500);
+        }
+
+        html.dark .glass-nav {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        html:not(.dark) .glass-nav {
+            background: rgba(251, 251, 253, 0.7);
+            backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+    </style>
+  <link rel="icon" type="image/png" href="favicon.png" />
+</head>
+<body class="antialiased theme-bg theme-text">
+
+    <!-- Global Navigation (Floating/Sticky) -->
+    <nav class="fixed top-0 w-full z-50 glass-nav h-14 flex items-center justify-between px-6 md:px-12 transition-colors duration-300">
+        <div class="font-semibold tracking-tight text-lg">Cortex Pro.</div>
+        
+        <div class="flex items-center gap-6">
+            <!-- Language Selector -->
+            <div class="flex gap-3 text-sm font-medium theme-text-muted">
+                <button onclick="setLang('en')" class="lang-btn hover:theme-text transition-colors" data-btn-lang="en">EN</button>
+                <button onclick="setLang('ru')" class="lang-btn hover:theme-text transition-colors" data-btn-lang="en">RU</button>
+                <button onclick="setLang('zh')" class="lang-btn hover:theme-text transition-colors" data-btn-lang="zh">ZH</button>
+                <button onclick="setLang('es')" class="lang-btn hover:theme-text transition-colors" data-btn-lang="es">ES</button>
+                <button onclick="setLang('ja')" class="lang-btn hover:theme-text transition-colors" data-btn-lang="ja">JA</button>
+            </div>
+            
+            <div class="w-px h-4 bg-gray-300 dark:bg-gray-700"></div>
+
+            <!-- Theme Toggle -->
+            <button onclick="toggleTheme()" class="theme-text hover:opacity-70 transition-opacity flex items-center justify-center">
+                <i id="theme-icon" class="ph-fill ph-moon text-xl"></i>
+            </button>
+        </div>
+    </nav>
+
+    <main class="scroll-container" id="scroll-container">
+        
+        <!-- Section 1: The Hook -->
+        <section class="scroll-section px-6 text-center">
+            <div class="reveal max-w-4xl mx-auto">
+                <h2 class="text-xl md:text-2xl font-semibold theme-text-muted mb-4 tracking-tight">
+                    <span data-lang="en">Pro. Beyond Pro.</span>
+                    <span data-lang="en">Pro. Больше, чем Pro.</span>
+                    <span data-lang="zh">Pro。超越 Pro。</span>
+                    <span data-lang="es">Pro. Más allá de Pro.</span>
+                    <span data-lang="ja">Pro。Proを超える。</span>
+                </h2>
+                <h1 class="text-6xl md:text-8xl lg:text-9xl font-bold tracking-tighter leading-tight mb-8">
+                    <span data-lang="en">Absolute <br><span class="gradient-text">Dominance.</span></span>
+                    <span data-lang="en">Абсолютное <br><span class="gradient-text">Превосходство.</span></span>
+                    <span data-lang="zh">绝对的 <br><span class="gradient-text">统治力。</span></span>
+                    <span data-lang="es">Dominio <br><span class="gradient-text">Absoluto.</span></span>
+                    <span data-lang="ja">絶対的な <br><span class="gradient-text">支配力。</span></span>
+                </h1>
+                <p class="text-xl md:text-3xl font-medium theme-text-muted tracking-tight max-w-2xl mx-auto">
+                    <span data-lang="en">The most powerful local trading toolkit ever created for Axiom.</span>
+                    <span data-lang="en">Самый мощный локальный торговый тулкит, когда-либо созданный для Axiom.</span>
+                    <span data-lang="zh">为 Axiom 创建的最强大的本地交易工具包。</span>
+                    <span data-lang="es">El conjunto de herramientas de trading local más potente jamás creado para Axiom.</span>
+                    <span data-lang="ja">Axiomのために作成された最も強力なローカルトレーディングツールキット。</span>
+                </p>
+                <div class="mt-16 animate-bounce text-apple-lightTextMuted dark:text-apple-darkTextMuted">
+                    <i class="ph ph-caret-down text-3xl"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: The Bookmarklet (Core Action) -->
+        <section class="scroll-section px-6 text-center bg-gray-50 dark:bg-[#111111]">
+            <div class="reveal max-w-4xl mx-auto flex flex-col items-center">
+                <h1 class="text-5xl md:text-7xl font-bold tracking-tighter mb-6">
+                    <span data-lang="en">Magic, in a button.</span>
+                    <span data-lang="en">Магия в одной кнопке.</span>
+                    <span data-lang="zh">魔力，尽在一个按钮。</span>
+                    <span data-lang="es">Magia, en un botón.</span>
+                    <span data-lang="ja">魔法は、ひとつのボタンに。</span>
+                </h1>
+                <p class="text-xl font-medium theme-text-muted mb-16 max-w-xl text-center">
+                    <span data-lang="en">No installations. No extensions. Just pure JavaScript performance isolated directly to your browser tab.</span>
+                    <span data-lang="en">Никаких установок. Никаких расширений. Только чистая производительность JavaScript, изолированная в вашей вкладке.</span>
+                    <span data-lang="zh">无需安装。无需扩展。只有纯粹的 JavaScript 性能，直接隔离在您的浏览器选项卡中。</span>
+                    <span data-lang="es">Sin instalaciones. Sin extensiones. Solo el rendimiento puro de JavaScript aislado directamente en su pestaña del navegador.</span>
+                    <span data-lang="ja">インストールなし。拡張機能なし。ブラウザのタブに直接分離された純粋なJavaScriptのパフォーマンスだけ。</span>
+                </p>
+
+                <div class="relative group cursor-move">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-[#32C5FF] via-[#B620E0] to-[#F7B500] rounded-[32px] blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+                    <a class="bookmarklet btn" href="#" data-style="relative block px-12 py-6 bg-black dark:bg-white text-white dark:text-black rounded-[30px] font-semibold text-2xl tracking-tight hover:scale-[1.02] transition-transform shadow-2xl">
+                        <span data-lang="en">Cortex Core</span>
+                        <span data-lang="en">Cortex Core</span>
+                        <span data-lang="zh">Cortex Core</span>
+                        <span data-lang="es">Cortex Core</span>
+                        <span data-lang="ja">Cortex Core</span>
+                    </a>
+                </div>
+                
+                <p class="mt-8 font-medium theme-text-muted text-sm tracking-widest uppercase">
+                    <span data-lang="en">Drag to Bookmarks Bar</span>
+                    <span data-lang="en">Перетащите на панель закладок</span>
+                    <span data-lang="zh">拖到书签栏</span>
+                    <span data-lang="es">Arrastre a la barra de marcadores</span>
+                    <span data-lang="ja">ブックマークバーにドラッグ</span>
+                </p>
+            </div>
+        </section>
+
+        <!-- Section 3: Installation Step 1 -->
+        <section class="scroll-section px-6 text-center">
+            <div class="reveal max-w-5xl mx-auto w-full">
+                <div class="flex flex-col md:flex-row items-center gap-12 md:gap-24 text-left">
+                    <div class="flex-1">
+                        <h3 class="text-apple-blue font-semibold text-xl md:text-2xl mb-2 tracking-tight">Step 1</h3>
+                        <h2 class="text-4xl md:text-6xl font-bold tracking-tighter mb-6">
+                            <span data-lang="en">Reveal the bar.</span>
+                            <span data-lang="en">Откройте панель.</span>
+                            <span data-lang="zh">显示书签栏。</span>
+                            <span data-lang="es">Revelar la barra.</span>
+                            <span data-lang="ja">バーを表示。</span>
+                        </h2>
+                        <p class="text-xl theme-text-muted font-medium">
+                            <span data-lang="en">Press <kbd class="font-sans px-2 py-1 bg-gray-200 dark:bg-gray-800 rounded-lg text-apple-lightText dark:text-apple-darkText border border-gray-300 dark:border-gray-700 mx-1 shadow-sm">Ctrl + Shift + B</kbd> (or Cmd) on your keyboard to make sure your bookmarks bar is visible.</span>
+                            <span data-lang="en">Нажмите <kbd class="font-sans px-2 py-1 bg-gray-200 dark:bg-gray-800 rounded-lg text-apple-lightText dark:text-apple-darkText border border-gray-300 dark:border-gray-700 mx-1 shadow-sm">Ctrl + Shift + B</kbd> (или Cmd), чтобы убедиться, что ваша панель закладок видима.</span>
+                            <span data-lang="zh">按键盘上的 <kbd class="font-sans px-2 py-1 bg-gray-200 dark:bg-gray-800 rounded-lg text-apple-lightText dark:text-apple-darkText border border-gray-300 dark:border-gray-700 mx-1 shadow-sm">Ctrl + Shift + B</kbd>（或 Cmd）以确保您的书签栏可见。</span>
+                            <span data-lang="es">Presione <kbd class="font-sans px-2 py-1 bg-gray-200 dark:bg-gray-800 rounded-lg text-apple-lightText dark:text-apple-darkText border border-gray-300 dark:border-gray-700 mx-1 shadow-sm">Ctrl + Shift + B</kbd> (o Cmd) en su teclado para asegurarse de que su barra de marcadores esté visible.</span>
+                            <span data-lang="ja">キーボードで <kbd class="font-sans px-2 py-1 bg-gray-200 dark:bg-gray-800 rounded-lg text-apple-lightText dark:text-apple-darkText border border-gray-300 dark:border-gray-700 mx-1 shadow-sm">Ctrl + Shift + B</kbd>（または Cmd）を押して、ブックマークバーが表示されていることを確認します。</span>
+                        </p>
+                    </div>
+                    <div class="flex-1 w-full flex justify-center">
+                        <div class="w-full max-w-sm aspect-video bg-gray-100 dark:bg-[#1d1d1f] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 dark:border-gray-800 relative">
+                            <!-- Fake Browser UI -->
+                            <div class="h-12 bg-gray-200 dark:bg-[#2d2d2f] flex items-center px-4 gap-2">
+                                <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                            </div>
+                            <div class="h-8 bg-gray-100 dark:bg-[#1d1d1f] border-b border-gray-300 dark:border-gray-800 flex items-center px-4 overflow-hidden relative">
+                                <div class="w-full h-full absolute inset-0 bg-apple-blue/10 animate-pulse"></div>
+                                <div class="text-[10px] font-semibold text-apple-blue relative z-10">Bookmarks Bar</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Installation Step 2 -->
+        <section class="scroll-section px-6 text-center bg-gray-50 dark:bg-[#111111]">
+            <div class="reveal max-w-5xl mx-auto w-full">
+                <div class="flex flex-col-reverse md:flex-row items-center gap-12 md:gap-24 text-left">
+                    <div class="flex-1 w-full flex justify-center">
+                        <div class="w-full max-w-sm aspect-square bg-gray-100 dark:bg-[#1d1d1f] rounded-3xl shadow-2xl flex items-center justify-center border border-gray-200 dark:border-gray-800 relative overflow-hidden">
+                            <i class="ph ph-hand-grabbing text-7xl text-apple-lightTextMuted dark:text-apple-darkTextMuted absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-bounce"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-apple-blue font-semibold text-xl md:text-2xl mb-2 tracking-tight">Step 2</h3>
+                        <h2 class="text-4xl md:text-6xl font-bold tracking-tighter mb-6">
+                            <span data-lang="en">Drag. Drop. Done.</span>
+                            <span data-lang="en">Тащи. Бросай. Готово.</span>
+                            <span data-lang="zh">拖拽。放下。完成。</span>
+                            <span data-lang="es">Arrastra. Suelta. Listo.</span>
+                            <span data-lang="ja">ドラッグ。ドロップ。完了。</span>
+                        </h2>
+                        <p class="text-xl theme-text-muted font-medium">
+                            <span data-lang="en">Click and drag the Cortex Core button from above into your bookmarks bar. It's instantly ready.</span>
+                            <span data-lang="en">Нажмите и перетащите кнопку Cortex Core сверху на панель закладок. Всё готово мгновенно.</span>
+                            <span data-lang="zh">点击并将上面的 Cortex Core 按钮拖入您的书签栏。它立即准备就绪。</span>
+                            <span data-lang="es">Haga clic y arrastre el botón Cortex Core de arriba hacia su barra de marcadores. Está listo al instante.</span>
+                            <span data-lang="ja">上の Cortex Core ボタンをクリックして、ブックマークバーにドラッグします。即座に準備完了です。</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Installation Step 3 -->
+        <section class="scroll-section px-6 text-center">
+            <div class="reveal max-w-5xl mx-auto w-full">
+                <div class="flex flex-col md:flex-row items-center gap-12 md:gap-24 text-left">
+                    <div class="flex-1">
+                        <h3 class="text-apple-blue font-semibold text-xl md:text-2xl mb-2 tracking-tight">Step 3</h3>
+                        <h2 class="text-4xl md:text-6xl font-bold tracking-tighter mb-6">
+                            <span data-lang="en">Execute.</span>
+                            <span data-lang="en">Выполнить.</span>
+                            <span data-lang="zh">执行。</span>
+                            <span data-lang="es">Ejecutar.</span>
+                            <span data-lang="ja">実行。</span>
+                        </h2>
+                        <p class="text-xl theme-text-muted font-medium">
+                            <span data-lang="en">Navigate to Axiom. Click the bookmark. Watch the interface transform.</span>
+                            <span data-lang="en">Перейдите в Axiom. Нажмите на закладку. Смотрите, как преображается интерфейс.</span>
+                            <span data-lang="zh">导航至 Axiom。单击书签。观看界面变形。</span>
+                            <span data-lang="es">Navegue a Axiom. Haga clic en el marcador. Observe cómo se transforma la interfaz.</span>
+                            <span data-lang="ja">Axiom に移動します。ブックマークをクリックします。インターフェースが変化するのをご覧ください。</span>
+                        </p>
+                    </div>
+                    <div class="flex-1 w-full flex justify-center">
+                        <div class="w-full max-w-sm aspect-video bg-black rounded-2xl shadow-2xl flex items-center justify-center overflow-hidden relative border border-gray-800">
+                            <div class="absolute inset-0 bg-gradient-to-tr from-green-500/20 to-blue-500/20"></div>
+                            <h1 class="text-white font-bold text-3xl tracking-tight z-10 mix-blend-overlay">axiom.trade</h1>
+                            <div class="absolute top-0 left-0 w-full h-1 bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.8)]"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Footer -->
+        <section class="h-auto py-12 px-6 flex flex-col items-center justify-center bg-gray-100 dark:bg-black snap-align-end">
+            <p class="theme-text-muted text-xs font-medium tracking-widest uppercase mb-4">Cortex Pro. Designed for performance.</p>
+            <p class="text-gray-400 dark:text-gray-600 text-[10px]">© 2026 Cortex Technologies. All rights reserved.</p>
+        </section>
+
+    </main>
+
+    <script>
+        // --- Translations & Theme ---
+        let currentLang = localStorage.getItem('cortex-lang') || 'en';
+        
+        const updateLangButtons = (lang) => {
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                if (btn.dataset.btnLang === lang) {
+                    btn.classList.add('text-apple-blue');
+                    btn.classList.remove('theme-text-muted');
+                } else {
+                    btn.classList.remove('text-apple-blue');
+                    btn.classList.add('theme-text-muted');
+                }
+            });
+        };
+
+        const setLang = (lang) => {
+            currentLang = lang;
+            updateLangButtons(lang);
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                if (el.dataset.lang === lang) {
+                    el.classList.add('lang-active');
+                } else {
+                    el.classList.remove('lang-active');
+                }
+            });
+            localStorage.setItem('cortex-lang', lang);
+        };
+        // Initialize lang
+        setLang(currentLang);
+
+        const toggleTheme = () => {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = 'ph-fill ph-moon text-xl';
+                localStorage.setItem('cortex-theme', 'light');
+            } else {
+                html.classList.add('dark');
+                icon.className = 'ph-fill ph-sun text-xl';
+                localStorage.setItem('cortex-theme', 'dark');
+            }
+        };
+
+        if (localStorage.getItem('cortex-theme') === 'light') {
+            document.documentElement.classList.remove('dark');
+            document.getElementById('theme-icon').className = 'ph-fill ph-moon text-xl';
+        } else {
+            document.documentElement.classList.add('dark');
+            document.getElementById('theme-icon').className = 'ph-fill ph-sun text-xl';
+        }
+
+        // --- Bookmarklet Design Hook ---
+        const bml = document.querySelector('.bookmarklet');
+        if (bml && bml.dataset.style) {
+            bml.className += ' ' + bml.dataset.style;
+        }
+
+        // --- Intersection Observer for Scroll Animations ---
+        const observerOptions = {
+            root: document.getElementById('scroll-container'),
+            rootMargin: '0px',
+            threshold: 0.5
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const reveals = entry.target.querySelectorAll('.reveal');
+                    reveals.forEach(el => el.classList.add('active'));
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.scroll-section').forEach(section => {
+            observer.observe(section);
+        });
+        
+        // Trigger for the first section on load
+        setTimeout(() => {
+            document.querySelectorAll('.scroll-section')[0].querySelectorAll('.reveal').forEach(el => el.classList.add('active'));
+        }, 100);
+
+    </script>
+</body>
+</html>
